@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "baa"
+version = "0.1.0"
+description = ""
+authors = ["Kishan <kishan.o@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.scripts]
+baa = "baa.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
