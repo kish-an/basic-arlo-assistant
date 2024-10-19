@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-from attendee_parser import butter
+from baa.attendee_parser import butter
 
 
 def baa(
