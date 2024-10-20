@@ -3,7 +3,29 @@ from requests.auth import HTTPBasicAuth
 from xml.etree import ElementTree
 
 from baa.helpers import get_keyring_credentials, remove_keyring_credentials
-from baa.exceptions import AuthenticationFailed, ApiCommunicationFailure
+from baa.exceptions import (
+    AuthenticationFailed,
+    ApiCommunicationFailure,
+    CourseCodeNotFound,
+)
+
+
+def append_paginated(
+    root: ElementTree.Element, session: requests.Session
+) -> ElementTree.Element:
+    next = root.find("./Link[@rel='next']")
+
+    while next is not None:
+        res = session.get(next.get("href"))
+
+        next_page = ElementTree.fromstring(res.content)
+        # Append all children elements to root tree
+        for elem in next_page.findall("*"):
+            root.append(elem)
+
+        next = next_page.find("./Link[@rel='next']")
+
+    return root
 
 
 def get_event(platform: str, course_code: str):
@@ -21,5 +43,18 @@ def get_event(platform: str, course_code: str):
     elif res.status_code != 200:
         raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
 
-    print(res.content)
-    events_tree = ElementTree.fromstring(res.content)
+    event_tree = append_paginated(
+        root=ElementTree.fromstring(res.content), session=session
+    )
+    event_id = getattr(
+        event_tree.find(f".//Code[. = '{course_code}']/../EventID"), "text", None
+    )
+    if event_id is None:
+        raise CourseCodeNotFound(
+            f"🚨 Could not find any events corresponding to the event code: {course_code}"
+        )
+
+    print(event_id)
+
+    # elem_tree = ElementTree.ElementTree(event_tree)
+    # elem_tree.write("output.xml")
