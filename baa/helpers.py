@@ -62,5 +62,6 @@ def get_keyring_credentials() -> Optional[Tuple[str, str]]:
         )
     )
 
+
 def remove_keyring_credentials() -> None:
     keyring.delete_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER)

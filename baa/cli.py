@@ -36,7 +36,7 @@ def main(
     attendee_file: Path, format: str, platform: str, course_code: Optional[str]
 ) -> None:
     """Automate registering attendees on Arlo from virtual meeting platforms attendance reports (ATTENDEE_FILE). See --format for the supported platforms"""
-    click.echo(f"{banner()}")
+    click.echo(banner())
 
     if not has_keyring_credentials():
         click.secho(
