@@ -9,9 +9,9 @@ def baa(
     attendee_file: Path,
     format: str,
     platform: str,
-    course_code: Optional[str],
+    event_code: Optional[str],
 ) -> None:
-    meeting = butter.get_attendees(attendee_file, course_code)
+    meeting = butter.get_attendees(attendee_file, event_code)
     meeting.attendees.sort()
 
-    get_event(platform, meeting.course_code)
+    get_event(platform, meeting.event_code)

@@ -29,11 +29,11 @@ from baa.exceptions import (
     help="The Arlo platform subdomain to use. This will be the first segment used to sign into the Arlo management system: {subdomain}.arlo.co",
 )
 @click.option(
-    "--course-code",
+    "--event-code",
     help="The course code to identify the Arlo event. This is only required if it can not be parsed from the ATTENDEE_FILE",
 )
 def main(
-    attendee_file: Path, format: str, platform: str, course_code: Optional[str]
+    attendee_file: Path, format: str, platform: str, event_code: Optional[str]
 ) -> None:
     """Automate registering attendees on Arlo from virtual meeting platforms attendance reports (ATTENDEE_FILE). See --format for the supported platforms"""
     click.echo(banner())
@@ -46,7 +46,7 @@ def main(
         set_keyring_credentials()
 
     try:
-        baa(attendee_file, format, platform, course_code)
+        baa(attendee_file, format, platform, event_code)
     except (
         CourseCodeNotFound,
         AuthenticationFailed,

@@ -17,6 +17,6 @@ class Attendee:
 class Meeting:
     """Meeting details"""
 
-    course_code: str
+    event_code: str
     start_date: datetime
     attendees: List[Attendee]

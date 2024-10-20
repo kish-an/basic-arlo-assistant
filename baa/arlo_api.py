@@ -28,7 +28,7 @@ def append_paginated(
     return root
 
 
-def get_event(platform: str, course_code: str):
+def get_event(platform: str, event_code: str) -> str:
     session = requests.Session()
     session.auth = HTTPBasicAuth(*get_keyring_credentials())
 
@@ -47,14 +47,15 @@ def get_event(platform: str, course_code: str):
         root=ElementTree.fromstring(res.content), session=session
     )
     event_id = getattr(
-        event_tree.find(f".//Code[. = '{course_code}']/../EventID"), "text", None
+        event_tree.find(f".//Code[. = '{event_code}']/../EventID"), "text", None
     )
     if event_id is None:
         raise CourseCodeNotFound(
-            f"🚨 Could not find any events corresponding to the event code: {course_code}"
+            f"🚨 Could not find any events corresponding to the event code: {event_code}"
         )
 
-    print(event_id)
+    return event_id
 
-    # elem_tree = ElementTree.ElementTree(event_tree)
-    # elem_tree.write("output.xml")
+
+def get_session():
+    pass
