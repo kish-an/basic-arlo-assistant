@@ -47,16 +47,15 @@ def set_keyring_credentials() -> None:
     keyring.set_password(
         BAA_KEYRING_DOMAIN,
         BAA_KEYRING_USER,
-        b64decode_str(
-            f"{click.prompt('Username')};{click.prompt('Password', hide_input=True, confirmation_prompt=True)}"
-        ),
+        f"{b64encode_str(click.prompt('Username'))};{b64encode_str(click.prompt('Password', hide_input=True, confirmation_prompt=True))}",
     )
 
 
-def get_keyring_credentials() -> Optional[Tuple[str]]:
+def get_keyring_credentials() -> Optional[Tuple[str, str]]:
     if not has_keyring_credentials():
         return None
 
-    return b64decode_str(
-        keyring.get_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER)
-    ).split(";")
+    return tuple(map(b64decode_str,
+        keyring.get_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER).split(";")
+    ))
+
