@@ -55,7 +55,12 @@ def get_keyring_credentials() -> Optional[Tuple[str, str]]:
     if not has_keyring_credentials():
         return None
 
-    return tuple(map(b64decode_str,
-        keyring.get_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER).split(";")
-    ))
+    return tuple(
+        map(
+            b64decode_str,
+            keyring.get_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER).split(";"),
+        )
+    )
 
+def remove_keyring_credentials() -> None:
+    keyring.delete_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER)
