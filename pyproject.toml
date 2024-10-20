@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 click = "^8.1.7"
+requests = "^2.32.3"
+keyring = "^25.4.1"
 
 [tool.poetry.scripts]
 baa = "baa.cli:main"
