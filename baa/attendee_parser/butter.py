@@ -18,13 +18,13 @@ def extract_metadata(
         if i == 0 and course_code is None:
             if row.find("CK") == -1:
                 raise CourseCodeNotFound(
-                    "The course code could not be found from the Butter room name. Use the --course-code option instead."
+                    "🚨 The course code could not be found from the Butter room name. Use the --course-code option instead"
                 )
             course_code = row[row.find("CK") :]
 
         # 3rd/4th rows contains start/end dates which will identify the Arlo EventSession. We only need the DD/MM/YYYY
         elif i == 2:
-            # Expected date format example: Sep 08 2024 - 06:30 PM
+            # Expected date format: Sep 08 2024 - 06:30 PM
             date_str = row.replace('"', "").replace("Started at: ", "")
             meeting_start = datetime.strptime(date_str, "%b %d %Y - %H:%M %p")
             continue
@@ -43,11 +43,11 @@ def get_attendees(attendee_file: Path, course_code: Optional[str]) -> Meeting:
         )
 
         for attendee in csv.DictReader(attendee_list):
-            if attendee["Type"] == "temp-host":
-                continue
-
             duration = float(attendee["Duration in session (minutes)"])
             attendee["Duration in session (minutes)"] = duration
+
+            if attendee["Type"] == "temp-host" or duration == 0:
+                continue
 
             # If this is a duplicate entry, add session duration to existing entry
             email = attendee["Email"]

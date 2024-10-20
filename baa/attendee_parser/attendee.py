@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 
-@dataclass
+@dataclass(order=True)
 class Attendee:
     """Individual attendee details"""
 
