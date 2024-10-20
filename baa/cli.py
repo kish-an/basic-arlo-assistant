@@ -1,26 +1,17 @@
 import click
-import os
+import sys
+import keyring
+from keyring.errors import PasswordSetError, PasswordDeleteError
 from pathlib import Path
 from typing import Optional
 
 from baa.main import baa
-
-
-def banner() -> str:
-    banner = [
-        "         __  _                            ",
-        "      .-.'  `; `-._  __  _                ",
-        "      (_,         .-:'  `; `-._           ",
-        "    ,'o\"(        (_,           )         ",
-        "   (__,-'      ,'o\"(            )>       ",
-        "      (       (__,-'            )         ",
-        "       `-'._.--._(             )          ",
-        "          |||  |||`-'._.--._.-'           ",
-        "                     |||  |||             ",
-        "                                          ",
-        "        Basic Arlo Assistant              ",
-    ]
-    return "\n".join(line.center(os.get_terminal_size().columns) for line in banner)
+from baa.helpers import has_keyring_credentials, set_keyring_credentials, banner
+from baa.exceptions import (
+    CourseCodeNotFound,
+    AuthenticationFailed,
+    ApiCommunicationFailure,
+)
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -39,23 +30,32 @@ def banner() -> str:
 )
 @click.option(
     "--course-code",
-    help="The course code to identify the Arlo event. This is only required if this is not included in the ATTENDEE_FILE",
+    help="The course code to identify the Arlo event. This is only required if it can not be parsed from the ATTENDEE_FILE",
 )
 def main(
     attendee_file: Path, format: str, platform: str, course_code: Optional[str]
 ) -> None:
-    """Automate registering attendees on Arlo from a virtual meeting platforms attendance report (ATTENDEE_FILE). See --format for the supported platforms"""
-    click.echo(f"{banner()}\n\n")
+    """Automate registering attendees on Arlo from virtual meeting platforms attendance reports (ATTENDEE_FILE). See --format for the supported platforms"""
+    click.echo(f"{banner()}")
 
-    if "ARLO_USER" not in os.environ or "ARLO_PASS" not in os.environ:
+    if not has_keyring_credentials():
         click.secho(
-            "Please enter your Arlo credentials. These are solely used to authenticate to the Arlo API.",
+            f"Please enter your Arlo login details, these are solely used to authenticate to the Arlo API. The credentials will be securely stored in your systems keyring service ({keyring.get_keyring().name})",
             fg="yellow",
         )
-    username: str = os.getenv("ARLO_USER") or click.prompt("Username")
-    password: str = os.getenv("ARLO_PASS") or click.prompt("Password", hide_input=True)
+        set_keyring_credentials()
 
-    baa(attendee_file, format, platform, course_code, username, password)
+    try:
+        baa(attendee_file, format, platform, course_code)
+    except (
+        CourseCodeNotFound,
+        AuthenticationFailed,
+        ApiCommunicationFailure,
+        PasswordSetError,
+        PasswordDeleteError,
+    ) as e:
+        click.secho(e, fg="red")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
