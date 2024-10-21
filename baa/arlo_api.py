@@ -2,9 +2,16 @@ import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
 from datetime import datetime
+from typing import Generator, Tuple
 
 from baa.helpers import get_keyring_credentials, remove_keyring_credentials
 from baa.classes import Attendance
+from baa.helpers import (
+    get_keyring_credentials,
+    remove_keyring_credentials,
+    LoadingSpinner,
+)
+from baa.classes import Attendance, Attendee
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
@@ -88,10 +95,19 @@ class ArloClient:
 
     def get_registrations(
         self, event_code: str, session_date: datetime
-    ) -> etree._Element:
+    ) -> Generator[Tuple[Attendee, str], None, None]:
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
-        return self._get_session_registrations(session_id)
+        registrations = self._get_session_registrations(session_id)
+
+        for reg in registrations.findall(".//Contact"):
+            first_name = reg.find("./FirstName").text
+            last_name = reg.find("./LastName").text
+            email = reg.find("./Email").text
+            # Traverse back up to Link with session registration href
+            reg_href = reg.find("../../../../Link").get("href")
+
+            yield (Attendee(name=f"{first_name} {last_name}", email=email), reg_href)
 
     def update_attendance(self, session_reg_href: str, attendance: Attendance) -> bool:
         headers = {"Content-Type": "application/xml"}
