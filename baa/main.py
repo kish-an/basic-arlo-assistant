@@ -1,8 +1,8 @@
 from pathlib import Path
+from datetime import datetime
 from typing import Optional
 
 from baa.attendee_parser import butter
-from baa.arlo_api import get_event
 
 
 def baa(
@@ -10,8 +10,8 @@ def baa(
     format: str,
     platform: str,
     event_code: Optional[str],
+    date: Optional[datetime],
+    skip_absent: bool,
 ) -> None:
     meeting = butter.get_attendees(attendee_file, event_code)
     meeting.attendees.sort()
-
-    get_event(platform, meeting.event_code)
