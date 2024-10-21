@@ -44,12 +44,12 @@ class ArloClient:
 
         return root
 
-    def get_event_id(self, event_code: str) -> str:
+    def _get_event_id(self, event_code: str) -> str:
         res = self._get_response(
             f"{self.base_url}/events", params={"expand": "Event"}
         )
-        event_tree = self._append_paginated(root=etree.fromstring(res.content))
 
+        event_tree = self._append_paginated(root=etree.fromstring(res.content))
         event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
         if event_id is None:
             raise CourseCodeNotFound(
@@ -57,3 +57,19 @@ class ArloClient:
             )
 
         return event_id
+
+    def _get_session_id(self, event_id: str, start_date: datetime) -> str:
+        res = self._get_response(
+            f"{self.base_url}/events/{event_id}/sessions", params={"expand": "EventSession"}
+        )
+
+        date = start_date.strftime("%Y-%m-%d")
+        session_tree = self._append_paginated(root=etree.fromstring(res.content))
+
+        session_ids = session_tree.xpath(
+            f".//StartDateTime[contains(text(),'{date}')]/preceding-sibling::SessionID/text()"
+        )
+        if len(session_ids) == 0:
+            raise SessionNotFound(f"🚨 No session found on: {date}")
+
+        return session_ids[0]
