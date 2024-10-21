@@ -1,34 +1,33 @@
 import requests
 from requests.auth import HTTPBasicAuth
-from xml.etree import ElementTree
+from lxml import etree
+from datetime import datetime
 
 from baa.helpers import get_keyring_credentials, remove_keyring_credentials
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
     CourseCodeNotFound,
+    SessionNotFound,
 )
 
 
-def append_paginated(
-    root: ElementTree.Element, session: requests.Session
-) -> ElementTree.Element:
-    next = root.find("./Link[@rel='next']")
+def append_paginated(root: etree._Element, session: requests.Session) -> etree._Element:
+    next_link = root.find("./Link[@rel='next']")
 
-    while next is not None:
-        res = session.get(next.get("href"))
+    while next_link is not None:
+        res = session.get(next_link.get("href"))
 
-        next_page = ElementTree.fromstring(res.content)
-        # Append all children elements to root tree
-        for elem in next_page.findall("*"):
+        next_page = etree.fromstring(res.content)
+        for elem in next_page:
             root.append(elem)
 
-        next = next_page.find("./Link[@rel='next']")
+        next_link = next_page.find("./Link[@rel='next']")
 
     return root
 
 
-def get_event(platform: str, event_code: str) -> str:
+def get_event_id(platform: str, event_code: str) -> str:
     session = requests.Session()
     session.auth = HTTPBasicAuth(*get_keyring_credentials())
 
@@ -43,12 +42,8 @@ def get_event(platform: str, event_code: str) -> str:
     elif res.status_code != 200:
         raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
 
-    event_tree = append_paginated(
-        root=ElementTree.fromstring(res.content), session=session
-    )
-    event_id = getattr(
-        event_tree.find(f".//Code[. = '{event_code}']/../EventID"), "text", None
-    )
+    event_tree = append_paginated(root=etree.fromstring(res.content), session=session)
+    event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
     if event_id is None:
         raise CourseCodeNotFound(
             f"🚨 Could not find any events corresponding to the event code: {event_code}"
