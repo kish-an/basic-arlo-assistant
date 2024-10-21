@@ -5,7 +5,12 @@ from datetime import datetime
 from typing import Optional
 
 from baa.main import baa
-from baa.helpers import banner, has_keyring_credentials, get_keyring_name, set_keyring_credentials
+from baa.helpers import (
+    banner,
+    has_keyring_credentials,
+    get_keyring_name,
+    set_keyring_credentials,
+)
 from baa.exceptions import (
     CourseCodeNotFound,
     AuthenticationFailed,
