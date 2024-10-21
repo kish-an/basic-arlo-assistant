@@ -4,6 +4,7 @@ from lxml import etree
 from datetime import datetime
 
 from baa.helpers import get_keyring_credentials, remove_keyring_credentials
+from baa.classes import Attendance
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
@@ -83,7 +84,6 @@ class ArloClient:
         )
 
         reg_tree = self._append_paginated(root=etree.fromstring(res.content))
-
         return reg_tree
 
     def get_registrations(
@@ -93,5 +93,13 @@ class ArloClient:
         session_id = self._get_session_id(event_id, session_date)
         return self._get_session_registrations(session_id)
 
-    def update_attendance(session_reg_href: str) -> bool:
-        pass
+    def update_attendance(self, session_reg_href: str, attendance: Attendance) -> bool:
+        headers = {"Content-Type": "application/xml"}
+        payload = f"""<?xml version="1.0" encoding="utf-8"?>
+        <diff>
+            <replace sel="EventSessionRegistration/Attendance/text()[1]">{attendance.value}</replace>
+        </diff>
+        """
+
+        res = self.session.patch(session_reg_href, data=payload, headers=headers)
+        return res.status_code == 200
