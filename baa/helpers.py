@@ -2,6 +2,7 @@ import base64
 import click
 import os
 import keyring
+from baa.exceptions import CredentialsNotFound
 from typing import Tuple, Optional
 
 
@@ -53,7 +54,9 @@ def set_keyring_credentials() -> None:
 
 def get_keyring_credentials() -> Optional[Tuple[str, str]]:
     if not has_keyring_credentials():
-        return None
+        raise CredentialsNotFound(
+            f"🚨 Could not find Arlo credentials in the keyring service ({keyring.get_keyring().name})"
+        )
 
     return tuple(
         map(

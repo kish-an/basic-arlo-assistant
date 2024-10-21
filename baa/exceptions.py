@@ -6,6 +6,22 @@ class CourseCodeNotFound(Exception):
     """
 
 
+class SessionNotFound(Exception):
+    """
+    Exception for missing session.
+
+    Raised when there are no sessions matching the provided date parsed from the attendance report.
+    """
+
+
+class CredentialsNotFound(Exception):
+    """
+    Exception for missing credentials.
+
+    Raised when get_keyring_credentials is called, which always expects to fetch credentials from the keyring service, and there is no valid entry.
+    """
+
+
 class AuthenticationFailed(Exception):
     """
     Exception for failing to autenticate to the Arlo API.
