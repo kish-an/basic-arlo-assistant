@@ -80,18 +80,15 @@ class ArloClient:
         return session_ids[0]
 
     def _get_session_registrations(self, session_id: str) -> etree._Element:
-        spinner = LoadingSpinner("Loading registrations...")
-        spinner.start()
+        with LoadingSpinner("Loading registrations..."):
+            res = self._get_response(
+                f"{self.base_url}/eventsessions/{session_id}/registrations",
+                params={
+                    "expand": "EventSessionRegistration,EventSessionRegistration/ParentRegistration,EventSessionRegistration/ParentRegistration/Contact"
+                },
+            )
+            reg_tree = self._append_paginated(root=etree.fromstring(res.content))
 
-        res = self._get_response(
-            f"{self.base_url}/eventsessions/{session_id}/registrations",
-            params={
-                "expand": "EventSessionRegistration,EventSessionRegistration/ParentRegistration,EventSessionRegistration/ParentRegistration/Contact"
-            },
-        )
-        reg_tree = self._append_paginated(root=etree.fromstring(res.content))
-
-        spinner.stop()
         return reg_tree
 
     def get_registrations(

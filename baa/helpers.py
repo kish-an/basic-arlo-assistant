@@ -104,3 +104,11 @@ class LoadingSpinner:
         click.echo()
         self.loading = False
         self.thread.join()
+
+    # Methods to support with statement (cleans up spinner in case an exception is hit)
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
