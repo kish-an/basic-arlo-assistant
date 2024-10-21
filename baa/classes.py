@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Optional, List
 from datetime import datetime
 
@@ -20,3 +21,9 @@ class Meeting:
     event_code: str
     start_date: datetime
     attendees: List[Attendee]
+
+
+class Attendance(Enum):
+    ATTENDED = "Attended"
+    DID_NOT_ATTEND = "DidNotAttend"
+    UNKNOWN = "Unknown"
