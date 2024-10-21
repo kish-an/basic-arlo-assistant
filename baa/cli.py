@@ -1,12 +1,11 @@
 import click
 import sys
-import keyring
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
 from baa.main import baa
-from baa.helpers import has_keyring_credentials, set_keyring_credentials, banner
+from baa.helpers import banner, has_keyring_credentials, get_keyring_name, set_keyring_credentials
 from baa.exceptions import (
     CourseCodeNotFound,
     AuthenticationFailed,
@@ -51,12 +50,12 @@ def main(
     date: Optional[datetime],
     skip_absent: bool,
 ) -> None:
-    """Automate registering attendees on Arlo from virtual meeting platforms attendance reports (ATTENDEE_FILE). See --format for supported platforms"""
+    """Automate registering attendees in Arlo with attendance reports from virtual meeting platforms (ATTENDEE_FILE). See --format for supported platforms"""
     click.echo(banner())
 
     if not has_keyring_credentials():
         click.secho(
-            f"Please enter your Arlo login details, these are solely used to authenticate to the Arlo API. The credentials will be securely stored in your systems keyring service ({keyring.get_keyring().name})",
+            f"Please enter your Arlo login details, these are solely used to authenticate to the Arlo API. The credentials will be securely stored in your systems keyring service ({get_keyring_name()})",
             fg="yellow",
         )
         set_keyring_credentials()

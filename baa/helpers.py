@@ -52,10 +52,13 @@ def set_keyring_credentials() -> None:
     )
 
 
+def get_keyring_name() -> str:
+    return keyring.get_keyring().name
+
 def get_keyring_credentials() -> Optional[Tuple[str, str]]:
     if not has_keyring_credentials():
         raise CredentialsNotFound(
-            f"🚨 Could not find Arlo credentials in the keyring service ({keyring.get_keyring().name})"
+            f"🚨 Could not find Arlo credentials in the keyring service ({get_keyring_name()})"
         )
 
     return tuple(
