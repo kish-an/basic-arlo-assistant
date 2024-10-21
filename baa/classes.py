@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List
 from datetime import datetime
@@ -9,9 +9,8 @@ class Attendee:
     """Individual attendee details"""
 
     name: str
-    email: Optional[str] = None
-    session_duration: Optional[float] = None
-    reg_id: Optional[str] = None
+    email: str
+    session_duration: Optional[float] = field(default=None, compare=False)
 
 
 @dataclass
