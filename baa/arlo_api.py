@@ -12,45 +12,48 @@ from baa.exceptions import (
 )
 
 
-def append_paginated(root: etree._Element, session: requests.Session) -> etree._Element:
-    next_link = root.find("./Link[@rel='next']")
+class ArloClient:
+    def __init__(self, platform: str):
+        self.session = requests.Session()
+        self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
+        self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
 
-    while next_link is not None:
-        res = session.get(next_link.get("href"))
+    def _get_response(self, url: str, params: dict = None) -> requests.Response:
+        res = self.session.get(url, params=params)
+        if res.status_code == 401:
+            remove_keyring_credentials()
+            raise AuthenticationFailed(
+                "🚨 Authentication to the Arlo API failed. Ensure you have provided the correct credentials"
+            )
+        elif res.status_code != 200:
+            raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
 
-        next_page = etree.fromstring(res.content)
-        for elem in next_page:
-            root.append(elem)
+        return res
 
-        next_link = next_page.find("./Link[@rel='next']")
+    def _append_paginated(self, root: etree._Element) -> etree._Element:
+        next_link = root.find("./Link[@rel='next']")
 
-    return root
+        while next_link is not None:
+            res = self._get_response(next_link.get("href"))
 
+            next_page = etree.fromstring(res.content)
+            for elem in next_page:
+                root.append(elem)
 
-def get_event_id(platform: str, event_code: str) -> str:
-    session = requests.Session()
-    session.auth = HTTPBasicAuth(*get_keyring_credentials())
+            next_link = next_page.find("./Link[@rel='next']")
 
-    base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
+        return root
 
-    res = session.get(f"{base_url}/events", params={"expand": "Event"})
-    if res.status_code == 401:
-        remove_keyring_credentials()
-        raise AuthenticationFailed(
-            "🚨 Authentication to the Arlo API failed. Ensure you have provided the correct credentials"
+    def get_event_id(self, event_code: str) -> str:
+        res = self._get_response(
+            f"{self.base_url}/events", params={"expand": "Event"}
         )
-    elif res.status_code != 200:
-        raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
+        event_tree = self._append_paginated(root=etree.fromstring(res.content))
 
-    event_tree = append_paginated(root=etree.fromstring(res.content), session=session)
-    event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
-    if event_id is None:
-        raise CourseCodeNotFound(
-            f"🚨 Could not find any events corresponding to the event code: {event_code}"
-        )
+        event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
+        if event_id is None:
+            raise CourseCodeNotFound(
+                f"🚨 Could not find any events corresponding to the event code: {event_code}"
+            )
 
-    return event_id
-
-
-def get_session():
-    pass
+        return event_id
