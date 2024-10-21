@@ -4,8 +4,6 @@ from lxml import etree
 from datetime import datetime
 from typing import Generator, Tuple
 
-from baa.helpers import get_keyring_credentials, remove_keyring_credentials
-from baa.classes import Attendance
 from baa.helpers import (
     get_keyring_credentials,
     remove_keyring_credentials,
@@ -25,7 +23,6 @@ class ArloClient:
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
-        self.missing_students = []
 
     def _get_response(self, url: str, params: dict = None) -> requests.Response:
         res = self.session.get(url, params=params)
@@ -83,14 +80,18 @@ class ArloClient:
         return session_ids[0]
 
     def _get_session_registrations(self, session_id: str) -> etree._Element:
+        spinner = LoadingSpinner("Loading registrations...")
+        spinner.start()
+
         res = self._get_response(
             f"{self.base_url}/eventsessions/{session_id}/registrations",
             params={
                 "expand": "EventSessionRegistration,EventSessionRegistration/ParentRegistration,EventSessionRegistration/ParentRegistration/Contact"
             },
         )
-
         reg_tree = self._append_paginated(root=etree.fromstring(res.content))
+
+        spinner.stop()
         return reg_tree
 
     def get_registrations(

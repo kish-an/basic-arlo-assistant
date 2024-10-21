@@ -2,8 +2,12 @@ import base64
 import click
 import os
 import keyring
+from threading import Thread
+from itertools import cycle
+import time
+from typing import Tuple, Optional, List
+
 from baa.exceptions import CredentialsNotFound
-from typing import Tuple, Optional
 
 
 BAA_BANNER = [
@@ -72,3 +76,31 @@ def get_keyring_credentials() -> Optional[Tuple[str, str]]:
 
 def remove_keyring_credentials() -> None:
     keyring.delete_password(BAA_KEYRING_DOMAIN, BAA_KEYRING_USER)
+
+
+class LoadingSpinner:
+    def __init__(
+        self,
+        msg: str = "Loading..",
+        icons: List[str] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+    ):
+        self.msg = msg
+        self.icons = cycle(icons)
+        self.loading = False
+        self.thread = None
+
+    def _spin(self) -> None:
+        while self.loading:
+            click.secho(f"\r{self.msg} {next(self.icons)}", fg="blue", nl=False)
+            time.sleep(0.1)
+
+    def start(self) -> None:
+        self.loading = True
+        self.thread = Thread(target=self._spin)
+        self.thread.start()
+
+    def stop(self) -> None:
+        # Move stdout to new line
+        click.echo()
+        self.loading = False
+        self.thread.join()
