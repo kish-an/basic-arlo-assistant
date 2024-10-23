@@ -82,21 +82,22 @@ class LoadingSpinner:
     def __init__(
         self,
         msg: str = "Loading..",
+        colour: str = "blue",
         icons: List[str] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
     ):
         self.msg = msg
+        self.colour = colour
         self.icons = cycle(icons)
         self.loading = False
-        self.thread = None
+        self.thread = Thread(target=self._spin)
 
     def _spin(self) -> None:
         while self.loading:
-            click.secho(f"\r{self.msg} {next(self.icons)}", fg="blue", nl=False)
+            click.secho(f"\r{self.msg} {next(self.icons)}", fg=self.colour, nl=False)
             time.sleep(0.1)
 
     def start(self) -> None:
         self.loading = True
-        self.thread = Thread(target=self._spin)
         self.thread.start()
 
     def stop(self) -> None:
@@ -110,5 +111,5 @@ class LoadingSpinner:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *args):
         self.stop()
