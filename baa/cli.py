@@ -45,16 +45,22 @@ from baa.exceptions import (
     help="Date of the meeting in YYYY-MM-DD format. Required if it cannot be automatically parsed from the ATTENDEE_FILE",
 )
 @click.option(
+    "--min-duration",
+    type=int,
+    default=0,
+    help="Minimum duration (in minutes) for an attendee to be marked as present",
+)
+@click.option(
     "--skip-absent",
     is_flag=True,
     default=False,
     help="If flag is set, only update attendance for present attendees in ATTENDEE_FILE. Absent attendees will not be updated",
 )
 @click.option(
-    "--min-duration",
-    type=int,
-    default=0,
-    help="Minimum duration (in minutes) for an attendee to be marked as present",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Simulate changes to be made without updating any registration records. ",
 )
 def main(
     attendee_file: Path,
@@ -62,8 +68,9 @@ def main(
     platform: str,
     event_code: Optional[str],
     date: Optional[datetime],
-    skip_absent: bool,
     min_duration: int,
+    skip_absent: bool,
+    dry_run: bool,
 ) -> None:
     """Automate registering attendees in Arlo with attendance reports from virtual meeting platforms (ATTENDEE_FILE). See --format for supported platforms"""
     click.echo(banner())
@@ -77,7 +84,14 @@ def main(
 
     try:
         baa(
-            attendee_file, format, platform, event_code, date, skip_absent, min_duration
+            attendee_file,
+            format,
+            platform,
+            event_code,
+            date,
+            min_duration,
+            skip_absent,
+            dry_run,
         )
     except (
         CourseCodeNotFound,

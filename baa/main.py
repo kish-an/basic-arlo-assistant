@@ -15,8 +15,9 @@ def baa(
     platform: str,
     event_code: Optional[str],
     date: Optional[datetime],
-    skip_absent: bool,
     min_duration: int,
+    skip_absent: bool,
+    dry_run: bool,
 ) -> None:
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
@@ -41,20 +42,21 @@ def baa(
         if skip_absent and not reg.attendance_registered:
             continue
 
-        update_success = arlo_client.update_attendance(
-            reg.reg_href,
-            (
-                Attendance.ATTENDED
-                if reg.attendance_registered
-                else Attendance.DID_NOT_ATTEND
-            ),
-        )
-        if not update_success:
-            click.secho(
-                f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
-                fg="yellow",
+        if not dry_run:
+            update_success = arlo_client.update_attendance(
+                reg.reg_href,
+                (
+                    Attendance.ATTENDED
+                    if reg.attendance_registered
+                    else Attendance.DID_NOT_ATTEND
+                ),
             )
-            reg.attendance_registered = None
+            if not update_success:
+                click.secho(
+                    f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
+                    fg="yellow",
+                )
+                reg.attendance_registered = None
 
         registered_table.add_row(
             [
@@ -83,15 +85,14 @@ def baa(
             field_names=["Name", "Email", "Duration (minutes)"]
         )
         unregistered_table.align = "l"
-        for not_reg in unregistered_attendees:
+        for attendee in unregistered_attendees:
             unregistered_table.add_row(
                 [
-                    not_reg.name,
-                    not_reg.email,
-                    (
-                        click.style(not_reg.session_duration, fg="red")
-                        if not_reg.session_duration < min_duration
-                        else not_reg.session_duration
+                    attendee.name,
+                    attendee.email,
+                    click.style(
+                        attendee.session_duration,
+                        fg="red" if attendee.session_duration < min_duration else "reset",
                     ),
                 ]
             )
