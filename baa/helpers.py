@@ -21,7 +21,7 @@ BAA_BANNER = [
     "          |||  |||`-'._.--._.-'           ",
     "                     |||  |||             ",
     "                                          ",
-    "       🐏 Basic Arlo Assistant 🐑          ",
+    "       🐑 Basic Arlo Assistant 🐑          ",
 ]
 
 BAA_KEYRING_DOMAIN = "Basic Arlo Assistant"
