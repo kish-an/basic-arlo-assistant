@@ -80,7 +80,7 @@ class ArloClient:
         return session_ids[0]
 
     def _get_session_registrations(self, session_id: str) -> etree._Element:
-        with LoadingSpinner("Loading registrations..."):
+        with LoadingSpinner("Loading registrations from Arlo..."):
             res = self._get_response(
                 f"{self.base_url}/eventsessions/{session_id}/registrations",
                 params={
@@ -93,7 +93,7 @@ class ArloClient:
 
     def get_registrations(
         self, event_code: str, session_date: datetime
-    ) -> Generator[Tuple[Attendee, str], None, None]:
+    ) -> Generator[Attendee, None, None]:
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
         registrations = self._get_session_registrations(session_id)
@@ -105,7 +105,9 @@ class ArloClient:
             # Traverse back up to Link with session registration href
             reg_href = reg.find("../../../../Link").get("href")
 
-            yield (Attendee(name=f"{first_name} {last_name}", email=email), reg_href)
+            yield Attendee(
+                name=f"{first_name} {last_name}", email=email, reg_href=reg_href
+            )
 
     def update_attendance(self, session_reg_href: str, attendance: Attendance) -> bool:
         headers = {"Content-Type": "application/xml"}

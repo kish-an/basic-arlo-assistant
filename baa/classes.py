@@ -8,9 +8,11 @@ from datetime import datetime
 class Attendee:
     """Individual attendee details"""
 
+    email: str 
     name: str
-    email: str
     session_duration: Optional[float] = field(default=None, compare=False)
+    reg_href: Optional[str] = field(default=None, compare=False)
+    attendance_registered: Optional[bool] = field(default=False, compare=False)
 
 
 @dataclass
