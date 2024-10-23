@@ -102,8 +102,15 @@ class ArloClient:
             first_name = reg.find("./FirstName").text
             last_name = reg.find("./LastName").text
             email = reg.find("./Email").text
-            # Traverse back up to Link with session registration href
-            reg_href = reg.find("../../../../Link").get("href")
+            # Traverse back up to Link with event session registration href
+            reg_href = (
+                reg.getparent()
+                .getparent()
+                .getparent()
+                .getparent()
+                .getparent()
+                .get("href")
+            )
 
             yield Attendee(
                 name=f"{first_name} {last_name}", email=email, reg_href=reg_href
