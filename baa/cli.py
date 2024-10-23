@@ -50,6 +50,11 @@ from baa.exceptions import (
     default=False,
     help="If flag is set, only update attendance for present attendees in ATTENDEE_FILE. Absent attendees will not be updated",
 )
+@click.option(
+    "--min-duration",
+    type=int,
+    default=0,
+    help="Minimum duration (in minutes) for an attendee to be marked as present",
 )
 def main(
     attendee_file: Path,
@@ -58,6 +63,7 @@ def main(
     event_code: Optional[str],
     date: Optional[datetime],
     skip_absent: bool,
+    min_duration: int,
 ) -> None:
     """Automate registering attendees in Arlo with attendance reports from virtual meeting platforms (ATTENDEE_FILE). See --format for supported platforms"""
     click.echo(banner())
@@ -70,7 +76,9 @@ def main(
         set_keyring_credentials()
 
     try:
-        baa(attendee_file, format, platform, event_code, date, skip_absent)
+        baa(
+            attendee_file, format, platform, event_code, date, skip_absent, min_duration
+        )
     except (
         CourseCodeNotFound,
         AuthenticationFailed,

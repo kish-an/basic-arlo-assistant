@@ -16,6 +16,7 @@ def baa(
     event_code: Optional[str],
     date: Optional[datetime],
     skip_absent: bool,
+    min_duration: int,
 ) -> None:
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
@@ -32,8 +33,9 @@ def baa(
         #  Check if registration matches any meeting attendees
         if reg in meeting.attendees:
             attendee = meeting.attendees[meeting.attendees.index(reg)]
-            attendee.attendance_registered = True
-            reg.attendance_registered = True
+            if attendee.session_duration > min_duration:
+                attendee.attendance_registered = True
+                reg.attendance_registered = True
 
         # Skip absent registrations if flag is set
         if skip_absent and not reg.attendance_registered:
@@ -49,7 +51,7 @@ def baa(
         )
         if not update_success:
             click.secho(
-                f"⚠️  Unable to update attendance for {reg.name} ({reg.email})",
+                f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
                 fg="yellow",
             )
             reg.attendance_registered = None
@@ -74,11 +76,23 @@ def baa(
     )
     if len(unregistered_attendees) > 0:
         click.secho(
-            f"⚠️  The following attendees could not be found in Arlo. {'They have been marked as did not attend!' if not skip_absent else ''} Follow up to confirm attendance",
+            f"⚠️  The following attendees could not be found in Arlo{', or they did not exceed the --min-duration threshold.' if min_duration > 0 else ''} {'They have been marked as did not attend!' if not skip_absent else ''} Follow up to confirm attendance",
             fg="yellow",
         )
-        unregistered_table = PrettyTable(field_names=["Name", "Email"])
+        unregistered_table = PrettyTable(
+            field_names=["Name", "Email", "Duration (minutes)"]
+        )
         unregistered_table.align = "l"
         for not_reg in unregistered_attendees:
-            unregistered_table.add_row([not_reg.name, not_reg.email])
+            unregistered_table.add_row(
+                [
+                    not_reg.name,
+                    not_reg.email,
+                    (
+                        click.style(not_reg.session_duration, fg="red")
+                        if not_reg.session_duration < min_duration
+                        else not_reg.session_duration
+                    ),
+                ]
+            )
         click.echo(f"{unregistered_table.get_string(sortby='Name')}")
