@@ -25,27 +25,31 @@ from baa.exceptions import (
     "--format",
     default="butter",
     type=click.Choice(["butter"], case_sensitive=False),
-    help="The format of the ATTENDEE_FILE. Most virtual meeting platforms provide functionality to generate an attendance report",
+    help="The format of the ATTENDEE_FILE. Most virtual meeting platforms allow generating attendance reports in various formats",
 )
 @click.option(
+    "-p",
     "--platform",
     default="codefirstgirls",
-    help="The Arlo platform subdomain to use. This will be the first segment used to sign into the Arlo management system: {subdomain}.arlo.co",
+    help="Subdomain of the Arlo platform to use for signing into the management system",
 )
 @click.option(
+    "-c",
     "--event-code",
-    help="The event code to identify the Arlo event. This is only required if it can not be parsed from ATTENDEE_FILE",
+    help="Unique code identifying the Arlo event. Required if it cannot be automatically parsed from the ATTENDEE_FILEE",
 )
 @click.option(
+    "-d",
     "--date",
     type=click.DateTime(formats=["%Y-%m-%d"]),
-    help="The date of the meeting in YYYY/MM/DD format to identify the Arlo session. This is only required if it can not be parsed from ATTENDEE_FILE",
+    help="Date of the meeting in YYYY-MM-DD format. Required if it cannot be automatically parsed from the ATTENDEE_FILE",
 )
 @click.option(
     "--skip-absent",
     is_flag=True,
-    default=True,
-    help="Only update attendance for any matches in ATTENDEE_FILE. The default behaviour will mark any absent attendees as did not attend",
+    default=False,
+    help="If flag is set, only update attendance for present attendees in ATTENDEE_FILE. Absent attendees will not be updated",
+)
 )
 def main(
     attendee_file: Path,
