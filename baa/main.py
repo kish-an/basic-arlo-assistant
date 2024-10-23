@@ -92,7 +92,11 @@ def baa(
                     attendee.email,
                     click.style(
                         attendee.session_duration,
-                        fg="red" if attendee.session_duration < min_duration else "reset",
+                        fg=(
+                            "red"
+                            if attendee.session_duration < min_duration
+                            else "reset"
+                        ),
                     ),
                 ]
             )

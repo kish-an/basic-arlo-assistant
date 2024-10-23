@@ -2,7 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
 from datetime import datetime
-from typing import Generator, Tuple
+from typing import Generator
 
 from baa.helpers import (
     get_keyring_credentials,
