@@ -9,7 +9,7 @@ from baa.helpers import (
     remove_keyring_credentials,
     LoadingSpinner,
 )
-from baa.classes import AttendanceStatus, Attendee
+from baa.classes import AttendanceStatus, ArloRegistration
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
@@ -124,7 +124,7 @@ class ArloClient:
 
     def get_registrations(
         self, event_code: str, session_date: datetime
-    ) -> Generator[Attendee, None, None]:
+    ) -> Generator[ArloRegistration, None, None]:
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
         registrations = self._get_registrations_tree(session_id)
@@ -143,8 +143,11 @@ class ArloClient:
                 .get("href")
             )
 
-            yield Attendee(
-                name=f"{first_name} {last_name}", email=email, reg_href=reg_href
+            yield ArloRegistration(
+                name=f"{first_name} {last_name}",
+                email=email,
+                reg_href=reg_href,
+                attendance_registered=False,
             )
 
     def update_attendance(
