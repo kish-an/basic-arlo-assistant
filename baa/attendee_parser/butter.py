@@ -5,7 +5,7 @@ from itertools import islice
 from typing import Optional, List, Tuple, Any
 
 from baa.exceptions import CourseCodeNotFound
-from baa.classes import Attendee, Meeting
+from baa.classes import ButterAttendee, Meeting
 
 
 def extract_metadata(
@@ -56,14 +56,15 @@ def get_attendees(attendee_file: Path, event_code: Optional[str]) -> Meeting:
             else:
                 unique_attendees[email] = attendee
 
-    meeting = Meeting(event_code=event_code, start_date=meeting_start, attendees=list())
+    attendees: List[ButterAttendee] = []
     for attendee in unique_attendees.values():
-        meeting.attendees.append(
-            Attendee(
+        attendees.append(
+            ButterAttendee(
                 name=attendee["Name"],
                 email=attendee["Email"],
                 session_duration=attendee["Duration in session (minutes)"],
+                attendance_registered=False,
             )
         )
 
-    return meeting
+    return Meeting(event_code, meeting_start, attendees)
