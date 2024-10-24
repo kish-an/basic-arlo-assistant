@@ -7,7 +7,6 @@ from typing import Generator, Dict
 from baa.helpers import (
     get_keyring_credentials,
     remove_keyring_credentials,
-    LoadingSpinner,
 )
 from baa.classes import AttendanceStatus, ArloRegistration
 from baa.exceptions import (
@@ -96,14 +95,13 @@ class ArloClient:
         return session_ids[0]
 
     def _get_registrations_tree(self, session_id: str) -> etree._Element:
-        with LoadingSpinner("Loading registrations from Arlo..."):
-            res = self._get_response(
-                f"{self.base_url}/eventsessions/{session_id}/registrations",
-                params={
-                    "expand": "EventSessionRegistration,EventSessionRegistration/ParentRegistration,EventSessionRegistration/ParentRegistration/Contact"
-                },
-            )
-            reg_tree = self._append_paginated(root=etree.fromstring(res.content))
+        res = self._get_response(
+            f"{self.base_url}/eventsessions/{session_id}/registrations",
+            params={
+                "expand": "EventSessionRegistration,EventSessionRegistration/ParentRegistration,EventSessionRegistration/ParentRegistration/Contact"
+            },
+        )
+        reg_tree = self._append_paginated(root=etree.fromstring(res.content))
 
         return reg_tree
 

@@ -7,6 +7,7 @@ from typing import Optional
 from baa.attendee_parser import butter
 from baa.arlo_api import ArloClient
 from baa.classes import AttendanceStatus
+from baa.helpers import LoadingSpinner
 
 
 def baa(
@@ -43,48 +44,49 @@ def baa(
     registered_table.align["Email"] = "l"
     registered_table.align["Attendance registered"] = "c"
 
-    for reg in arlo_client.get_registrations(
-        event_code,
-        session_date,
-    ):
-        #  Check if registration matches any meeting attendees
-        if reg in meeting.attendees:
-            attendee = meeting.attendees[meeting.attendees.index(reg)]
-            if attendee.session_duration > min_duration:
-                attendee.attendance_registered = True
-                reg.attendance_registered = True
+    with LoadingSpinner("Updating Arlo registrations"):
+        for reg in arlo_client.get_registrations(
+            event_code,
+            session_date,
+        ):
+            #  Check if registration matches any meeting attendees
+            if reg in meeting.attendees:
+                attendee = meeting.attendees[meeting.attendees.index(reg)]
+                if attendee.session_duration > min_duration:
+                    attendee.attendance_registered = True
+                    reg.attendance_registered = True
 
-        # Skip absent registrations if flag is set
-        if skip_absent and not reg.attendance_registered:
-            continue
+            # Skip absent registrations if flag is set
+            if skip_absent and not reg.attendance_registered:
+                continue
 
-        if not dry_run:
-            update_success = arlo_client.update_attendance(
-                reg.reg_href,
-                (
-                    AttendanceStatus.ATTENDED
-                    if reg.attendance_registered
-                    else AttendanceStatus.DID_NOT_ATTEND
-                ),
-            )
-            if not update_success:
-                click.secho(
-                    f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
-                    fg="yellow",
+            if not dry_run:
+                update_success = arlo_client.update_attendance(
+                    reg.reg_href,
+                    (
+                        AttendanceStatus.ATTENDED
+                        if reg.attendance_registered
+                        else AttendanceStatus.DID_NOT_ATTEND
+                    ),
                 )
-                reg.attendance_registered = None
+                if not update_success:
+                    click.secho(
+                        f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
+                        fg="yellow",
+                    )
+                    reg.attendance_registered = None
 
-        registered_table.add_row(
-            [
-                reg.name,
-                reg.email,
-                (
-                    "✅"
-                    if reg.attendance_registered
-                    else "⚠️" if reg.attendance_registered is None else "❌"
-                ),
-            ]
-        )
+            registered_table.add_row(
+                [
+                    reg.name,
+                    reg.email,
+                    (
+                        "✅"
+                        if reg.attendance_registered
+                        else "⚠️" if reg.attendance_registered is None else "❌"
+                    ),
+                ]
+            )
 
     if len(registered_table.rows) > 0:
         click.echo(f"{registered_table.get_string(sortby='Name')}\n")
