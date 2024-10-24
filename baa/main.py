@@ -44,13 +44,14 @@ def baa(
     registered_table.align["Email"] = "l"
     registered_table.align["Attendance registered"] = "c"
 
-    loading_msg = "Updating Arlo registrations" if not dry_run else "Loading Arlo registrations (no records will be updated)"
+    loading_msg = (
+        "Updating Arlo registrations"
+        if not dry_run
+        else "Loading Arlo registrations (no records will be updated)"
+    )
     with LoadingSpinner(loading_msg):
-        for reg in arlo_client.get_registrations(
-            event_code,
-            session_date,
-        ):
-            #  Check if registration matches any meeting attendees
+        for reg in arlo_client.get_registrations(event_code, session_date):
+            # Check if registration matches any meeting attendees
             if reg in meeting.attendees:
                 attendee = meeting.attendees[meeting.attendees.index(reg)]
                 if attendee.session_duration > min_duration:
@@ -72,29 +73,22 @@ def baa(
                 )
                 if not update_success:
                     click.secho(
-                        f"⚠️  Unable to update attendance for {reg.name}: {reg.email})",
+                        f"⚠️  Unable to update attendance for {reg.name}: {reg.email}",
                         fg="yellow",
                     )
                     reg.attendance_registered = None
 
-            registered_table.add_row(
-                [
-                    reg.name,
-                    reg.email,
-                    (
-                        "✅"
-                        if reg.attendance_registered
-                        else "⚠️" if reg.attendance_registered is None else "❌"
-                    ),
-                ]
+            status_icon = {True: "✅", False: "❌", None: "⚠️"}.get(
+                reg.attendance_registered
             )
+            registered_table.add_row([reg.name, reg.email, status_icon])
 
-    if len(registered_table.rows) > 0:
+    if registered_table.rows:
         click.echo(f"{registered_table.get_string(sortby='Name')}\n")
 
-    unregistered_attendees = list(
-        filter(lambda a: not a.attendance_registered, meeting.attendees)
-    )
+    unregistered_attendees = [
+        a for a in meeting.attendees if not a.attendance_registered
+    ]
     if len(unregistered_attendees) > 0:
         click.secho(
             f"⚠️  The following attendees could not be found in Arlo{', or they did not exceed the --min-duration threshold.' if min_duration > 0 else ''} {'They have been marked as did not attend!' if not skip_absent else ''} Follow up to confirm attendance",
