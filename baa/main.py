@@ -44,7 +44,8 @@ def baa(
     registered_table.align["Email"] = "l"
     registered_table.align["Attendance registered"] = "c"
 
-    with LoadingSpinner("Updating Arlo registrations"):
+    loading_msg = "Updating Arlo registrations" if not dry_run else "Loading Arlo registrations (no records will be updated)"
+    with LoadingSpinner(loading_msg):
         for reg in arlo_client.get_registrations(
             event_code,
             session_date,
