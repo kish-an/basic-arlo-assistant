@@ -28,7 +28,10 @@ class ArloRegistration(Attendee):
             return NotImplemented
 
         if isinstance(other, ButterAttendee):
-            return self.name == other.name or self.email == other.email
+            return (
+                self.name.lower() == other.name.lower()
+                or self.email.lower() == other.email.lower()
+            )
         else:
             return NotImplemented
 
