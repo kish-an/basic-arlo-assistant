@@ -110,7 +110,7 @@ class ArloClient:
     def get_event_name(self, event_code: str) -> str:
         event_tree = self._get_event_tree(event_code)
 
-        return event_tree.findtext(f".//Code[. ='{event_code}']/../Name")
+        return event_tree.findtext(f".//Code[. ='{event_code}']/../Name") or "Not found"
 
     def get_session_name(self, event_code: str, start_date: datetime) -> str:
         event_id = self._get_event_id(event_code)
@@ -120,7 +120,7 @@ class ArloClient:
         session_names = session_tree.xpath(
             f".//StartDateTime[contains(text(),'{date}')]/preceding-sibling::Name/text()"
         )
-        return None if len(session_names) == 0 else session_names[0]
+        return "Not found" if len(session_names) == 0 else session_names[0]
 
     def get_registrations(
         self, event_code: str, session_date: datetime
