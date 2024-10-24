@@ -2,7 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
 from datetime import datetime
-from typing import Generator
+from typing import Generator, Dict
 
 from baa.helpers import (
     get_keyring_credentials,
@@ -23,6 +23,8 @@ class ArloClient:
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
+        self.event_cache: Dict[str, etree._Element] = {}
+        self.session_cache: Dict[str, etree._Element] = {}
 
     def _get_response(self, url: str, params: dict = None) -> requests.Response:
         res = self.session.get(url, params=params)
@@ -50,10 +52,29 @@ class ArloClient:
 
         return root
 
-    def _get_event_id(self, event_code: str) -> str:
-        res = self._get_response(f"{self.base_url}/events", params={"expand": "Event"})
+    def _get_event_tree(self, event_code: str) -> etree._Element:
+        if event_code in self.event_cache:
+            return self.event_cache[event_code]
 
+        res = self._get_response(f"{self.base_url}/events", params={"expand": "Event"})
         event_tree = self._append_paginated(root=etree.fromstring(res.content))
+        self.event_cache[event_code] = event_tree
+        return event_tree
+
+    def _get_session_tree(self, event_id: str) -> etree._Element:
+        if event_id in self.session_cache:
+            return self.session_cache[event_id]
+
+        res = self._get_response(
+            f"{self.base_url}/events/{event_id}/sessions",
+            params={"expand": "EventSession"},
+        )
+        session_tree = self._append_paginated(root=etree.fromstring(res.content))
+        self.session_cache[event_id] = session_tree
+        return session_tree
+
+    def _get_event_id(self, event_code: str) -> str:
+        event_tree = self._get_event_tree(event_code)
         event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
         if event_id is None:
             raise CourseCodeNotFound(
@@ -63,13 +84,8 @@ class ArloClient:
         return event_id
 
     def _get_session_id(self, event_id: str, start_date: datetime) -> str:
-        res = self._get_response(
-            f"{self.base_url}/events/{event_id}/sessions",
-            params={"expand": "EventSession"},
-        )
-
+        session_tree = self._get_session_tree(event_id)
         date = start_date.strftime("%Y-%m-%d")
-        session_tree = self._append_paginated(root=etree.fromstring(res.content))
 
         session_ids = session_tree.xpath(
             f".//StartDateTime[contains(text(),'{date}')]/preceding-sibling::SessionID/text()"
@@ -79,7 +95,7 @@ class ArloClient:
 
         return session_ids[0]
 
-    def _get_session_registrations(self, session_id: str) -> etree._Element:
+    def _get_registrations_tree(self, session_id: str) -> etree._Element:
         with LoadingSpinner("Loading registrations from Arlo..."):
             res = self._get_response(
                 f"{self.base_url}/eventsessions/{session_id}/registrations",
@@ -91,12 +107,27 @@ class ArloClient:
 
         return reg_tree
 
+    def get_event_name(self, event_code: str) -> str:
+        event_tree = self._get_event_tree(event_code)
+
+        return event_tree.findtext(f".//Code[. ='{event_code}']/../Name")
+
+    def get_session_name(self, event_code: str, start_date: datetime) -> str:
+        event_id = self._get_event_id(event_code)
+        session_tree = self._get_session_tree(event_id)
+
+        date = start_date.strftime("%Y-%m-%d")
+        session_names = session_tree.xpath(
+            f".//StartDateTime[contains(text(),'{date}')]/preceding-sibling::Name/text()"
+        )
+        return None if len(session_names) == 0 else session_names[0]
+
     def get_registrations(
         self, event_code: str, session_date: datetime
     ) -> Generator[Attendee, None, None]:
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
-        registrations = self._get_session_registrations(session_id)
+        registrations = self._get_registrations_tree(session_id)
 
         for reg in registrations.findall(".//Contact"):
             first_name = reg.find("./FirstName").text

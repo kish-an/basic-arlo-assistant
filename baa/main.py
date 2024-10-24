@@ -21,15 +21,31 @@ def baa(
 ) -> None:
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
+    event_code = event_code or meeting.event_code
+    session_date = date or meeting.start_date
+
+    click.echo(
+        click.style("Event: ", fg="green", bold=True)
+        + click.style(arlo_client.get_event_name(event_code), fg="green")
+    )
+    click.echo(
+        click.style("Session: ", fg="green", bold=True)
+        + click.style(
+            arlo_client.get_session_name(event_code, session_date), fg="green"
+        )
+        + "\n"
+    )
 
     registered_table = PrettyTable(
         field_names=["Name", "Email", "Attendance registered"]
     )
-    registered_table.align = "l"
+    registered_table.align["Name"] = "l"
+    registered_table.align["Email"] = "l"
+    registered_table.align["Attendance registered"] = "c"
 
     for reg in arlo_client.get_registrations(
-        event_code=event_code or meeting.event_code,
-        session_date=date or meeting.start_date,
+        event_code,
+        session_date,
     ):
         #  Check if registration matches any meeting attendees
         if reg in meeting.attendees:
