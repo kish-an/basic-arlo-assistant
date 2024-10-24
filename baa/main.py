@@ -6,7 +6,7 @@ from typing import Optional
 
 from baa.attendee_parser import butter
 from baa.arlo_api import ArloClient
-from baa.classes import Attendance
+from baa.classes import AttendanceStatus
 
 
 def baa(
@@ -46,9 +46,9 @@ def baa(
             update_success = arlo_client.update_attendance(
                 reg.reg_href,
                 (
-                    Attendance.ATTENDED
+                    AttendanceStatus.ATTENDED
                     if reg.attendance_registered
-                    else Attendance.DID_NOT_ATTEND
+                    else AttendanceStatus.DID_NOT_ATTEND
                 ),
             )
             if not update_success:

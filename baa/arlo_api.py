@@ -9,7 +9,7 @@ from baa.helpers import (
     remove_keyring_credentials,
     LoadingSpinner,
 )
-from baa.classes import Attendance, Attendee
+from baa.classes import AttendanceStatus, Attendee
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
@@ -116,7 +116,9 @@ class ArloClient:
                 name=f"{first_name} {last_name}", email=email, reg_href=reg_href
             )
 
-    def update_attendance(self, session_reg_href: str, attendance: Attendance) -> bool:
+    def update_attendance(
+        self, session_reg_href: str, attendance: AttendanceStatus
+    ) -> bool:
         headers = {"Content-Type": "application/xml"}
         payload = f"""<?xml version="1.0" encoding="utf-8"?>
         <diff>

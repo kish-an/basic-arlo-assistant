@@ -24,7 +24,7 @@ class Meeting:
     attendees: List[Attendee]
 
 
-class Attendance(Enum):
+class AttendanceStatus(Enum):
     ATTENDED = "Attended"
     DID_NOT_ATTEND = "DidNotAttend"
     UNKNOWN = "Unknown"
