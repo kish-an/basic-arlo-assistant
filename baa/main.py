@@ -2,7 +2,6 @@ from pathlib import Path
 import click
 from prettytable import PrettyTable
 from datetime import datetime
-from typing import Optional
 
 from baa.attendee_parser import butter
 from baa.arlo_api import ArloClient
@@ -14,8 +13,8 @@ def baa(
     attendee_file: Path,
     format: str,
     platform: str,
-    event_code: Optional[str],
-    date: Optional[datetime],
+    event_code: str | None,
+    date: datetime | None,
     min_duration: int,
     skip_absent: bool,
     dry_run: bool,

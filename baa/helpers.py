@@ -5,7 +5,6 @@ import keyring
 from threading import Thread
 from itertools import cycle
 import time
-from typing import Tuple, Optional, List
 
 from baa.exceptions import CredentialsNotFound
 
@@ -32,13 +31,13 @@ def banner() -> str:
     return "\n".join(line.center(os.get_terminal_size().columns) for line in BAA_BANNER)
 
 
-def b64encode_str(msg: str, encoding="utf-8") -> str:
+def b64encode_str(msg: str, encoding: str = "utf-8") -> str:
     msg_bytes = msg.encode(encoding)
     base64_bytes = base64.b64encode(msg_bytes)
     return base64_bytes.decode(encoding)
 
 
-def b64decode_str(msg: str, encoding="utf-8") -> str:
+def b64decode_str(msg: str, encoding: str = "utf-8") -> str:
     base64_bytes = msg.encode(encoding)
     msg_bytes = base64.b64decode(base64_bytes)
     return msg_bytes.decode(encoding)
@@ -60,7 +59,7 @@ def get_keyring_name() -> str:
     return keyring.get_keyring().name
 
 
-def get_keyring_credentials() -> Optional[Tuple[str, str]]:
+def get_keyring_credentials() -> tuple[str, str]:
     if not has_keyring_credentials():
         raise CredentialsNotFound(
             f"🚨 Could not find Arlo credentials in the keyring service ({get_keyring_name()})"
@@ -81,9 +80,9 @@ def remove_keyring_credentials() -> None:
 class LoadingSpinner:
     def __init__(
         self,
-        msg: str = "Loading..",
+        msg: str = "Loading",
         colour: str = "blue",
-        icons: List[str] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+        icons: list[str] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
     ):
         self.msg = msg
         self.colour = colour

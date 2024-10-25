@@ -2,15 +2,15 @@ import csv
 from pathlib import Path
 from datetime import datetime
 from itertools import islice
-from typing import Optional, List, Tuple, Any
+from typing import Any
 
 from baa.exceptions import CourseCodeNotFound
 from baa.classes import ButterAttendee, Meeting
 
 
 def extract_metadata(
-    rows: List[str], event_code: Optional[str]
-) -> Tuple[str, datetime]:
+    rows: list[str], event_code: str | None
+) -> tuple[str, datetime]:
     """Get meeting details from metadata"""
     for i, row in enumerate(rows):
         row = row.strip().replace(",", "")
@@ -32,7 +32,7 @@ def extract_metadata(
     return (event_code, meeting_start)
 
 
-def get_attendees(attendee_file: Path, event_code: Optional[str]) -> Meeting:
+def get_attendees(attendee_file: Path, event_code: str | None) -> Meeting:
     """Get list of attendees from Butter attendance report csv"""
     # Key = Email, Value = Row of attendee from csv.DictReader
     unique_attendees: dict[str, dict[str, Any]] = dict()
@@ -56,14 +56,13 @@ def get_attendees(attendee_file: Path, event_code: Optional[str]) -> Meeting:
             else:
                 unique_attendees[email] = attendee
 
-    attendees: List[ButterAttendee] = []
+    attendees: list[ButterAttendee] = []
     for attendee in unique_attendees.values():
         attendees.append(
             ButterAttendee(
                 name=attendee["Name"],
                 email=attendee["Email"],
                 session_duration=attendee["Duration in session (minutes)"],
-                attendance_registered=False,
             )
         )
 

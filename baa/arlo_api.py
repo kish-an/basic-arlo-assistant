@@ -2,7 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
 from datetime import datetime
-from typing import Generator, Dict
+from typing import Iterator
 
 from baa.helpers import (
     get_keyring_credentials,
@@ -22,8 +22,8 @@ class ArloClient:
         self.session = requests.Session()
         self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
-        self.event_cache: Dict[str, etree._Element] = {}
-        self.session_cache: Dict[str, etree._Element] = {}
+        self.event_cache: dict[str, etree._Element] = {}
+        self.session_cache: dict[str, etree._Element] = {}
 
     def _get_response(self, url: str, params: dict = None) -> requests.Response:
         res = self.session.get(url, params=params)
@@ -122,7 +122,7 @@ class ArloClient:
 
     def get_registrations(
         self, event_code: str, session_date: datetime
-    ) -> Generator[ArloRegistration, None, None]:
+    ) -> Iterator[ArloRegistration]:
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
         registrations = self._get_registrations_tree(session_id)
@@ -145,7 +145,6 @@ class ArloClient:
                 name=f"{first_name} {last_name}",
                 email=email,
                 reg_href=reg_href,
-                attendance_registered=False,
             )
 
     def update_attendance(

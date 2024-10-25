@@ -2,7 +2,6 @@ import click
 import sys
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
 
 from baa.main import baa
 from baa.helpers import (
@@ -66,8 +65,8 @@ def main(
     attendee_file: Path,
     format: str,
     platform: str,
-    event_code: Optional[str],
-    date: Optional[datetime],
+    event_code: str | None,
+    date: datetime | None,
     min_duration: int,
     skip_absent: bool,
     dry_run: bool,

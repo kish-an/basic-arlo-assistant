@@ -1,25 +1,24 @@
 from dataclasses import dataclass
 from abc import ABC
 from enum import Enum
-from typing import Optional, List
 from datetime import datetime
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Attendee(ABC):
     """Attendee base class. All format specific attendee classes should derive from this"""
 
     name: str
     email: str
-    attendance_registered: Optional[bool]
+    attendance_registered: bool | None = False
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ButterAttendee(Attendee):
     session_duration: float
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ArloRegistration(Attendee):
     reg_href: str
 
@@ -40,7 +39,7 @@ class ArloRegistration(Attendee):
 class Meeting:
     event_code: str
     start_date: datetime
-    attendees: List[Attendee]
+    attendees: list[Attendee]
 
 
 class AttendanceStatus(Enum):
