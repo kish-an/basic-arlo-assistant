@@ -16,6 +16,9 @@ prettytable = "^3.11.0"
 [tool.poetry.scripts]
 baa = "baa.cli:main"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
