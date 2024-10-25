@@ -4,13 +4,11 @@ from datetime import datetime
 from itertools import islice
 from typing import Any
 
-from baa.exceptions import CourseCodeNotFound
+from baa.exceptions import CourseCodeNotFound, AttendeeFileProcessingError
 from baa.classes import ButterAttendee, Meeting
 
 
-def extract_metadata(
-    rows: list[str], event_code: str | None
-) -> tuple[str, datetime]:
+def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, datetime]:
     """Get meeting details from metadata"""
     for i, row in enumerate(rows):
         row = row.strip().replace(",", "")
@@ -37,24 +35,29 @@ def get_attendees(attendee_file: Path, event_code: str | None) -> Meeting:
     # Key = Email, Value = Row of attendee from csv.DictReader
     unique_attendees: dict[str, dict[str, Any]] = dict()
 
-    with open(attendee_file) as attendee_list:
-        event_code, meeting_start = extract_metadata(
-            list(islice(attendee_list, 6)), event_code
+    try:
+        with open(attendee_file) as attendee_list:
+            event_code, meeting_start = extract_metadata(
+                list(islice(attendee_list, 6)), event_code
+            )
+
+            for attendee in csv.DictReader(attendee_list):
+                duration = float(attendee["Duration in session (minutes)"])
+                attendee["Duration in session (minutes)"] = duration
+
+                if attendee["Type"] == "temp-host" or duration == 0:
+                    continue
+
+                # If this is a duplicate entry, add session duration to existing entry
+                email = attendee["Email"]
+                if email in unique_attendees:
+                    unique_attendees[email]["Duration in session (minutes)"] += duration
+                else:
+                    unique_attendees[email] = attendee
+    except Exception as e:
+        raise AttendeeFileProcessingError(
+            f"🚨 An error occured while processing ATTENDEE_FILE: {e}"
         )
-
-        for attendee in csv.DictReader(attendee_list):
-            duration = float(attendee["Duration in session (minutes)"])
-            attendee["Duration in session (minutes)"] = duration
-
-            if attendee["Type"] == "temp-host" or duration == 0:
-                continue
-
-            # If this is a duplicate entry, add session duration to existing entry
-            email = attendee["Email"]
-            if email in unique_attendees:
-                unique_attendees[email]["Duration in session (minutes)"] += duration
-            else:
-                unique_attendees[email] = attendee
 
     attendees: list[ButterAttendee] = []
     for attendee in unique_attendees.values():

@@ -14,6 +14,7 @@ from baa.exceptions import (
     CourseCodeNotFound,
     AuthenticationFailed,
     ApiCommunicationFailure,
+    AttendeeFileProcessingError,
 )
 
 
@@ -96,6 +97,7 @@ def main(
         CourseCodeNotFound,
         AuthenticationFailed,
         ApiCommunicationFailure,
+        AttendeeFileProcessingError,
     ) as e:
         click.secho(e, fg="red")
         sys.exit(1)

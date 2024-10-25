@@ -8,7 +8,7 @@ class CourseCodeNotFound(Exception):
 
 class SessionNotFound(Exception):
     """
-    Exception for missing session.
+    Exception for not being able to find a valid Arlo Event Session.
 
     Raised when there are no sessions matching the provided date parsed from the attendance report.
     """
@@ -35,4 +35,13 @@ class ApiCommunicationFailure(Exception):
     Exception for not being able to connect to the Arlo API.
 
     Raised when making a request to the Arlo API, and the response HTTP code is not 200.
+    """
+
+
+class AttendeeFileProcessingError(Exception):
+    """
+    Exception for issues encountered while processing the attendee file.
+
+    Raised when the attendee file is not in the expected format,
+    or when there are errors during the parsing of its contents.
     """
