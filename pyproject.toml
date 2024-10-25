@@ -6,7 +6,7 @@ authors = ["Kishan <kishan.o@hotmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 click = "^8.1.7"
 requests = "^2.32.3"
 keyring = "^25.4.1"
