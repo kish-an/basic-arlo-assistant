@@ -1,8 +1,8 @@
-class CourseCodeNotFound(Exception):
+class EventNotFound(Exception):
     """
-    Exception for missing course code.
+    Exception for not being able to find a valid Arlo Event.
 
-    Raised when an attendance report is parsed and no course code can be found. This exception is also raised if the supplied course code does not correspond to any Arlo events.
+    Raised when an attendance report is parsed and no event code can be found. This exception is also raised if the supplied event code does not correspond to any Arlo events.
     """
 
 

@@ -11,7 +11,7 @@ from baa.helpers import (
     set_keyring_credentials,
 )
 from baa.exceptions import (
-    CourseCodeNotFound,
+    EventNotFound,
     AuthenticationFailed,
     ApiCommunicationFailure,
     AttendeeFileProcessingError,
@@ -94,7 +94,7 @@ def main(
             dry_run,
         )
     except (
-        CourseCodeNotFound,
+        EventNotFound,
         AuthenticationFailed,
         ApiCommunicationFailure,
         AttendeeFileProcessingError,

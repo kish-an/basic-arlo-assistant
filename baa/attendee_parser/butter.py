@@ -4,7 +4,7 @@ from datetime import datetime
 from itertools import islice
 from typing import Any
 
-from baa.exceptions import CourseCodeNotFound, AttendeeFileProcessingError
+from baa.exceptions import EventNotFound, AttendeeFileProcessingError
 from baa.classes import ButterAttendee, Meeting
 
 
@@ -12,11 +12,11 @@ def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, date
     """Get meeting details from metadata"""
     for i, row in enumerate(rows):
         row = row.strip().replace(",", "")
-        # 1st row is the room name, which should contain the course code at the end. This will identify the Arlo Event
+        # 1st row is the room name, which should contain the event code at the end. This will identify the Arlo Event
         if i == 0 and event_code is None:
             if row.find("CK") == -1:
-                raise CourseCodeNotFound(
-                    "🚨 The course code could not be found from the Butter room name. Use the --course-code option instead"
+                raise EventNotFound(
+                    "🚨 The event code could not be found from the Butter room name. Use the --event-code option instead"
                 )
             event_code = row[row.find("CK") :]
 

@@ -12,7 +12,7 @@ from baa.classes import AttendanceStatus, ArloRegistration
 from baa.exceptions import (
     AuthenticationFailed,
     ApiCommunicationFailure,
-    CourseCodeNotFound,
+    EventNotFound,
     SessionNotFound,
 )
 
@@ -76,7 +76,7 @@ class ArloClient:
         event_tree = self._get_event_tree(event_code)
         event_id = event_tree.findtext(f".//Code[. ='{event_code}']/../EventID")
         if event_id is None:
-            raise CourseCodeNotFound(
+            raise EventNotFound(
                 f"🚨 Could not find any events corresponding to the event code: {event_code}"
             )
 
