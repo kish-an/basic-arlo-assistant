@@ -11,7 +11,6 @@ def mock_arlo_client(mocker):
 
 @pytest.fixture(autouse=True)
 def mock_meeting(mocker):
-    mock_attendee_parser = mocker.patch("baa.attendee_parser.butter.get_attendees")
     mock_meeting = mocker.MagicMock()
     mock_meeting.attendees = [
         ButterAttendee(
@@ -27,7 +26,7 @@ def mock_meeting(mocker):
             email="amela@example.com",
         ),
     ]
-    mock_attendee_parser.return_value = mock_meeting
+    mocker.patch("baa.attendee_parser.butter.get_attendees", return_value=mock_meeting)
     return mock_meeting
 
 
@@ -43,21 +42,24 @@ def setup_registration(mocker, mock_arlo_client, name):
     return reg, mock_update_attnd
 
 
-def test_baa_updates_attendance(mocker, mock_arlo_client, tmp_path):
-    reg, mock_update_attnd = setup_registration(
-        mocker, mock_arlo_client, "Maya Angelou"
-    )
-
+def run_baa(tmp_path, min_duration=0, skip_absent=False, dry_run=False):
     baa(
         attendee_file=tmp_path / "test.csv",
         format="dummy_format",
         platform="dummy_platform",
         event_code=None,
         date=None,
-        min_duration=0,
-        skip_absent=False,
-        dry_run=False,
+        min_duration=min_duration,
+        skip_absent=skip_absent,
+        dry_run=dry_run,
     )
+
+
+def test_baa_updates_attendance(mocker, mock_arlo_client, tmp_path):
+    reg, mock_update_attnd = setup_registration(
+        mocker, mock_arlo_client, "Maya Angelou"
+    )
+    run_baa(tmp_path)
 
     assert reg.attendance_registered
     mock_update_attnd.assert_called_with(reg.reg_href, AttendanceStatus.ATTENDED)
@@ -67,17 +69,7 @@ def test_baa_registration_absent(mocker, mock_arlo_client, tmp_path):
     reg, mock_update_attnd = setup_registration(
         mocker, mock_arlo_client, "Edith Clarke"
     )
-
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=0,
-        skip_absent=False,
-        dry_run=False,
-    )
+    run_baa(tmp_path)
 
     assert not reg.attendance_registered
     mock_update_attnd.assert_called_with(reg.reg_href, AttendanceStatus.DID_NOT_ATTEND)
@@ -87,17 +79,7 @@ def test_baa_min_duration(mocker, mock_arlo_client, tmp_path):
     reg, mock_update_attnd = setup_registration(
         mocker, mock_arlo_client, "Maya Angelou"
     )
-
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=90,
-        skip_absent=False,
-        dry_run=False,
-    )
+    run_baa(tmp_path, min_duration=90)
 
     assert not reg.attendance_registered
     mock_update_attnd.assert_called_once_with(
@@ -109,17 +91,7 @@ def test_baa_skip_absent(mocker, mock_arlo_client, tmp_path):
     reg, mock_update_attnd = setup_registration(
         mocker, mock_arlo_client, "Joyce Aylard"
     )
-
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=0,
-        skip_absent=True,
-        dry_run=False,
-    )
+    run_baa(tmp_path, skip_absent=True)
 
     assert not reg.attendance_registered
     mock_update_attnd.assert_not_called()
@@ -129,37 +101,16 @@ def test_baa_dry_run(mocker, mock_arlo_client, tmp_path):
     reg, mock_update_attnd = setup_registration(
         mocker, mock_arlo_client, "Amelia Earhart"
     )
-
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=0,
-        skip_absent=False,
-        dry_run=True,
-    )
+    run_baa(tmp_path, dry_run=True)
 
     assert reg.attendance_registered
     mock_update_attnd.assert_not_called()
 
 
 def test_baa_attendee_not_found(mocker, mock_arlo_client, mock_meeting, tmp_path):
-    setup_registration(
-        mocker, mock_arlo_client, "Maya Angelou"
-    )
+    setup_registration(mocker, mock_arlo_client, "Maya Angelou")
+    run_baa(tmp_path)
 
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=0,
-        skip_absent=False,
-        dry_run=False,
-    )
     attendee1, attendee2 = mock_meeting.attendees
     assert attendee1.attendance_registered and not attendee2.attendance_registered
 
@@ -176,16 +127,7 @@ def test_baa_update_failed(mocker, mock_arlo_client, tmp_path):
     mock_arlo_client.return_value.update_attendance = mock_update_attnd
     mock_arlo_client.return_value.get_registrations.return_value = [reg1, reg2]
 
-    baa(
-        attendee_file=tmp_path / "test.csv",
-        format="dummy_format",
-        platform="dummy_platform",
-        event_code=None,
-        date=None,
-        min_duration=0,
-        skip_absent=False,
-        dry_run=False,
-    )
+    run_baa(tmp_path)
 
     mock_update_attnd.assert_has_calls(
         [
