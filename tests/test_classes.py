@@ -6,9 +6,7 @@ from baa.classes import ButterAttendee, ArloRegistration, AttendanceStatus
 @pytest.fixture
 def meeting_attendees():
     return [
-        ButterAttendee(
-            name="Ada Lovelace", email="ada@example.com", session_duration=105.24
-        ),
+        ButterAttendee(name="Ada Lo", email="ada@example.com", session_duration=105.24),
         ButterAttendee(
             name="Mary Shelley", email="mry@example.com", session_duration=120.0
         ),
@@ -17,7 +15,7 @@ def meeting_attendees():
 
 def test_arlo_reg_butter_attendee_equality(meeting_attendees):
     arlo_reg1 = ArloRegistration(
-        name="Ada Lo", email="ada@example.com", reg_href="href"
+        name="Ada Lovelace", email="ada@example.com", reg_href="href1"
     )
     arlo_reg2 = ArloRegistration(
         name="Mary Shelley", email="mary@example.com", reg_href="href2"
