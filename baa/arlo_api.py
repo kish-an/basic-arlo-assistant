@@ -1,6 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
+from copy import deepcopy
 from datetime import datetime
 from typing import Iterator
 
@@ -45,7 +46,8 @@ class ArloClient:
 
             next_page = etree.fromstring(res.content)
             for elem in next_page:
-                root.append(elem)
+                # Copy element as appending will reparent the node
+                root.append(deepcopy(elem))
 
             next_link = next_page.find("./Link[@rel='next']")
 
