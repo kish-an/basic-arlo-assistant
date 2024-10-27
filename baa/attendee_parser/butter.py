@@ -9,7 +9,19 @@ from baa.classes import ButterAttendee, Meeting
 
 
 def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, datetime]:
-    """Get meeting details from metadata"""
+    """
+    Extract event code and meeting start time from metadata rows.
+
+    Args:
+        rows (list[str]): A list of strings representing the rows of metadata.
+        event_code (str | None): The event code to extract from the room name, if not already provided.
+
+    Raises:
+        EventNotFound: If the event code cannot be found in the room name.
+
+    Returns:
+        tuple[str, datetime]: A tuple containing the event code and the meeting start datetime.
+    """
     for i, row in enumerate(rows):
         row = row.strip().replace(",", "")
         # 1st row is the room name, which should contain the event code at the end. This will identify the Arlo Event
@@ -31,7 +43,19 @@ def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, date
 
 
 def get_attendees(attendee_file: Path, event_code: str | None) -> Meeting:
-    """Get list of attendees from Butter attendance report csv"""
+    """
+    Retrieve attendees from a Butter participant list CSV file.
+
+    Args:
+        attendee_file (Path): The path to the Butter participant list CSV file.
+        event_code (str | None): The code associated with the Arlo Event.
+
+    Returns:
+        Meeting: A Meeting object containing the event code, meeting start time, and a list of ButterAttendee objects.
+
+    Raises:
+        AttendeeFileProcessingError: If an error occurs while processing the attendee file.
+    """
     # Key = Email, Value = Row of attendee from csv.DictReader
     unique_attendees: dict[str, dict[str, Any]] = dict()
 
