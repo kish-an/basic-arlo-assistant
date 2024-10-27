@@ -2,7 +2,7 @@ class EventNotFound(Exception):
     """
     Exception for not being able to find a valid Arlo Event.
 
-    Raised when an attendance report is parsed and no event code can be found. This exception is also raised if the supplied event code does not correspond to any Arlo events.
+    Raised when an attendee file is parsed and no event code can be found. This exception is also raised if the supplied event code does not correspond to any Arlo events.
     """
 
 
@@ -10,13 +10,13 @@ class SessionNotFound(Exception):
     """
     Exception for not being able to find a valid Arlo Event Session.
 
-    Raised when there are no sessions matching the provided date parsed from the attendance report.
+    Raised when an attendee file is parsed and no sessions match the date. This exception is also raised if the supplied date does not correspond to any Arlo Event Sessions.
     """
 
 
 class CredentialsNotFound(Exception):
     """
-    Exception for missing credentials.
+    Exception for missing keyring credentials.
 
     Raised when get_keyring_credentials is called, which always expects to fetch credentials from the keyring service, and there is no valid entry.
     """
