@@ -113,6 +113,7 @@ def remove_keyring_credentials() -> None:
 
 class LoadingSpinner:
     """A simple loading spinner for indicating progress in the console."""
+
     def __init__(
         self,
         msg: str = "Loading",
