@@ -1,3 +1,4 @@
+import logging
 import requests
 from requests.auth import HTTPBasicAuth
 from lxml import etree
@@ -16,6 +17,8 @@ from baa.exceptions import (
     EventNotFound,
     SessionNotFound,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ArloClient:
@@ -38,6 +41,7 @@ class ArloClient:
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
         self.event_cache: dict[str, etree._Element] = {}
         self.session_cache: dict[str, etree._Element] = {}
+        logger.debug(f"Initialising ArloClient for {self.base_url}")
 
     def _get_response(self, url: str, params: dict = None) -> requests.Response:
         """
@@ -290,4 +294,8 @@ class ArloClient:
         """
 
         res = self.session.patch(session_reg_href, data=payload, headers=headers)
+        if res.status_code != 200:
+            logger.error(
+                f"Unable to update attendance: {res.status_code} {res.content}"
+            )
         return res.status_code == 200

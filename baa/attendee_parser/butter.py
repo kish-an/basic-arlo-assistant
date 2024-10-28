@@ -1,3 +1,4 @@
+import logging
 import csv
 from pathlib import Path
 from datetime import datetime
@@ -6,6 +7,8 @@ from typing import Any
 
 from baa.exceptions import EventNotFound, AttendeeFileProcessingError
 from baa.classes import ButterAttendee, Meeting
+
+logger = logging.getLogger(__name__)
 
 
 def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, datetime]:
@@ -31,12 +34,14 @@ def extract_metadata(rows: list[str], event_code: str | None) -> tuple[str, date
                     "🚨 The event code could not be found from the Butter room name. Use the --event-code option instead"
                 )
             event_code = row[row.find("CK") :]
+            logger.debug(f"Found event count from file: {event_code}")
 
         # 3rd/4th rows contains start/end dates which will identify the Arlo EventSession. We only need the DD/MM/YYYY
         elif i == 2:
             # Expected date format: Sep 08 2024 - 06:30 PM
             date_str = row.replace('"', "").replace("Started at: ", "")
             meeting_start = datetime.strptime(date_str, "%b %d %Y - %H:%M %p")
+            logger.debug(f"Found meeting date from file: {meeting_start}")
             continue
 
     return (event_code, meeting_start)
@@ -85,12 +90,12 @@ def get_attendees(attendee_file: Path, event_code: str | None) -> Meeting:
 
     attendees: list[ButterAttendee] = []
     for attendee in unique_attendees.values():
-        attendees.append(
-            ButterAttendee(
-                name=attendee["Name"],
-                email=attendee["Email"],
-                session_duration=attendee["Duration in session (minutes)"],
-            )
+        attendee = ButterAttendee(
+            name=attendee["Name"],
+            email=attendee["Email"],
+            session_duration=attendee["Duration in session (minutes)"],
         )
+        logger.debug(f"Creating attendee: {attendee}")
+        attendees.append(attendee)
 
     return Meeting(event_code, meeting_start, attendees)

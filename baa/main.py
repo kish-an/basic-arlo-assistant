@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import click
 from prettytable import PrettyTable
@@ -7,6 +8,8 @@ from baa.attendee_parser import butter
 from baa.arlo_api import ArloClient
 from baa.classes import AttendanceStatus
 from baa.helpers import LoadingSpinner
+
+logger = logging.getLogger(__name__)
 
 
 def baa(
@@ -24,6 +27,8 @@ def baa(
 
     This function matches registrations in Arlo with attendees from the specified file, updating their attendance status according to criteria like minimum session duration and skipping absent registrations. Can also be used in a dry-run mode where the process is simulated but no updates are made.
     """
+    logger.info(f"Processing attendees in {attendee_file}")
+
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
     event_code = event_code or meeting.event_code
@@ -58,15 +63,23 @@ def baa(
             # Check if registration matches any meeting attendees
             if reg in meeting.attendees:
                 attendee = meeting.attendees[meeting.attendees.index(reg)]
-                if attendee.session_duration > min_duration:
-                    attendee.attendance_registered = True
-                    reg.attendance_registered = True
+                logger.debug(f"Match found in Arlo for {attendee}")
+
+                if attendee.session_duration < min_duration:
+                    logger.debug(
+                        f"Attendee did not meet minimum duration threshold {min_duration} mins: {attendee}"
+                    )
+                    continue
+
+                attendee.attendance_registered = True
+                reg.attendance_registered = True
 
             # Skip absent registrations if flag is set
             if skip_absent and not reg.attendance_registered:
                 continue
 
             if not dry_run:
+                logger.debug(f"Updating attendance for {reg}")
                 update_success = arlo_client.update_attendance(
                     reg.reg_href,
                     (

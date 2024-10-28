@@ -2,8 +2,10 @@ import click
 import sys
 from pathlib import Path
 from datetime import datetime
+import logging
 
 from baa.main import baa
+from baa.log import configure_logger
 from baa.helpers import (
     banner,
     has_keyring_credentials,
@@ -16,6 +18,8 @@ from baa.exceptions import (
     ApiCommunicationFailure,
     AttendeeFileProcessingError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -62,6 +66,13 @@ from baa.exceptions import (
     default=False,
     help="Simulate changes to be made without updating any registration records. ",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Print detailed debug information",
+)
 def main(
     attendee_file: Path,
     format: str,
@@ -71,13 +82,19 @@ def main(
     min_duration: int,
     skip_absent: bool,
     dry_run: bool,
+    verbose: bool,
 ) -> None:
     """Automate registering attendees in Arlo with attendance reports from virtual meeting platforms (ATTENDEE_FILE). See --format for supported platforms"""
+    configure_logger(level="DEBUG" if verbose else "CRITICAL")
+
     click.echo(banner())
 
     if not has_keyring_credentials():
+        logger.warning(
+            f"Unable to find baa credentials in {get_keyring_name()}. Prompting user for Arlo credentials"
+        )
         click.secho(
-            f"Please enter your Arlo login details, these are solely used to authenticate to the Arlo API. The credentials will be securely stored in your systems keyring service ({get_keyring_name()})",
+            f"Please enter your Arlo login details, these are solely used to authenticate to the Arlo API. The credentials will be securely stored in your systems keyring service",
             fg="yellow",
         )
         set_keyring_credentials()
