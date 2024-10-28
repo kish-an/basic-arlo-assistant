@@ -19,6 +19,11 @@ def baa(
     skip_absent: bool,
     dry_run: bool,
 ) -> None:
+    """
+    Update Arlo attendance records based on attendees from the provided attendee file.
+
+    This function matches registrations in Arlo with attendees from the specified file, updating their attendance status according to criteria like minimum session duration and skipping absent registrations. Can also be used in a dry-run mode where the process is simulated but no updates are made.
+    """
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
     event_code = event_code or meeting.event_code
