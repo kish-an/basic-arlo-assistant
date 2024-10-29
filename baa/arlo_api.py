@@ -249,6 +249,9 @@ class ArloClient:
         Yields:
             ArloRegistration: The registration information for each contact.
         """
+        logger.debug(
+            f"Retrieving registrations for event {event_code}, from {session_date}"
+        )
         event_id = self._get_event_id(event_code)
         session_id = self._get_session_id(event_id, session_date)
         registrations = self._get_registrations_tree(session_id)
