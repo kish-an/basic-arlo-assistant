@@ -65,14 +65,13 @@ def baa(
                 attendee = meeting.attendees[meeting.attendees.index(reg)]
                 logger.debug(f"Match found in Arlo for {attendee}")
 
-                if attendee.session_duration < min_duration:
+                if attendee.session_duration >= min_duration:
+                    attendee.attendance_registered = True
+                    reg.attendance_registered = True
+                else:
                     logger.debug(
-                        f"Attendee did not meet minimum duration threshold {min_duration} mins: {attendee}"
+                        f"Did not meet minimum duration threshold of{min_duration} mins"
                     )
-                    continue
-
-                attendee.attendance_registered = True
-                reg.attendance_registered = True
 
             # Skip absent registrations if flag is set
             if skip_absent and not reg.attendance_registered:
