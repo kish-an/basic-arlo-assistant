@@ -3,6 +3,7 @@ from pathlib import Path
 import click
 from prettytable import PrettyTable
 from datetime import datetime
+from timeit import default_timer as timer
 
 from baa.attendee_parser import butter
 from baa.arlo_api import ArloClient
@@ -28,6 +29,7 @@ def baa(
     This function matches registrations in Arlo with attendees from the specified file, updating their attendance status according to criteria like minimum session duration and skipping absent registrations. Can also be used in a dry-run mode where the process is simulated but no updates are made.
     """
     logger.info(f"Processing attendees in {attendee_file}")
+    start = timer()
 
     meeting = butter.get_attendees(attendee_file, event_code)
     arlo_client = ArloClient(platform)
@@ -78,14 +80,15 @@ def baa(
                 continue
 
             if not dry_run:
-                logger.debug(f"Updating attendance for {reg}")
+                attendance_status = (
+                    AttendanceStatus.ATTENDED
+                    if reg.attendance_registered
+                    else AttendanceStatus.DID_NOT_ATTEND
+                )
+                logger.debug(f"Updating attendance for {reg} to {attendance_status}")
+
                 update_success = arlo_client.update_attendance(
-                    reg.reg_href,
-                    (
-                        AttendanceStatus.ATTENDED
-                        if reg.attendance_registered
-                        else AttendanceStatus.DID_NOT_ATTEND
-                    ),
+                    reg.reg_href, attendance_status
                 )
                 if not update_success:
                     click.secho(
@@ -98,6 +101,9 @@ def baa(
                 reg.attendance_registered
             )
             registered_table.add_row([reg.name, reg.email, status_icon])
+
+    end = timer()
+    logger.debug(f"Elapsed time to update registrations was {end - start} seconds")
 
     if registered_table.rows:
         click.echo(f"{registered_table.get_string(sortby='Name')}\n")
