@@ -61,12 +61,18 @@ Alternatively, baa can be installed with pip.
 pip install baa
 ```
 
-## Usage
+## Usage
 
 View the available options that baa supports
 
 ```sh
 baa -h
+```
+
+The attendance report (see [supported platforms](#supported-platforms)) must be provided. By default, baa will try to find a match for each attendee in Arlo and mark them as attended. All other registrations for the session will be marked as did not attend.
+
+```sh
+baa path/to/attendance-report.csv
 ```
 
 ## Supported Platforms
