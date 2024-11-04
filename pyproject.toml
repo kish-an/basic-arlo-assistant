@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Command line utility to automate attendance registration in Arlo"
 authors = ["Kishan <kishan.o@hotmail.com>"]
 readme = "README.md"
+license = "MIT"
+repository = "https://github.com/kish-an/basic-arlo-assistant"
 
 [tool.poetry.dependencies]
 python = "^3.10"
