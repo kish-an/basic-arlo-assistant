@@ -55,7 +55,7 @@ pipx install baa
 Alternatively, baa can be installed with pip.
 
 > [!TIP]
-> Use `pip install --user` if you do not have administrative administrative privileges, or want to avoid affecting other users on your system. This will install packages for the current user, rather than the default system-wide directory.
+> Use `pip install --user` if you do not have administrative privileges, or want to avoid affecting other users on your system. This will install packages for the current user, rather than the default system-wide directory.
 
 ```sh
 pip install baa
