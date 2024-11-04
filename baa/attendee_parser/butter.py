@@ -78,7 +78,7 @@ def get_attendees(attendee_file: Path, event_code: str | None) -> Meeting:
                     continue
 
                 # If this is a duplicate entry, add session duration to existing entry
-                email = attendee["Email"]
+                email = attendee["Email"].lower()
                 if email in unique_attendees:
                     unique_attendees[email]["Duration in session (minutes)"] += duration
                 else:
