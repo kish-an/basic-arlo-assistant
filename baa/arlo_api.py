@@ -257,6 +257,10 @@ class ArloClient:
         registrations = self._get_registrations_tree(session_id)
 
         for reg in registrations.findall(".//Contact"):
+            status = reg.getparent().getparent().find("./Status").text
+            if status == "Cancelled":
+                continue
+
             first_name = reg.find("./FirstName").text
             last_name = reg.find("./LastName").text
             email = reg.find("./Email").text
