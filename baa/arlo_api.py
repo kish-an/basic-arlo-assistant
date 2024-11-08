@@ -38,6 +38,7 @@ class ArloClient:
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
         auth = httpx.BasicAuth(*get_keyring_credentials())
         self.client = httpx.Client(auth=auth)
+        self.async_client = httpx.AsyncClient(auth=auth)
         self.event_cache: dict[str, etree._Element] = {}
         self.session_cache: dict[str, etree._Element] = {}
         logger.debug(f"Initialising ArloClient for {self.base_url}")
@@ -275,7 +276,7 @@ class ArloClient:
                 reg_href=reg_href,
             )
 
-    def update_attendance(
+    async def update_attendance(
         self, session_reg_href: str, attendance: AttendanceStatus
     ) -> bool:
         """
@@ -294,10 +295,11 @@ class ArloClient:
             <replace sel="EventSessionRegistration/Attendance/text()[1]">{attendance.value}</replace>
         </diff>
         """
-
-        res = self.session.patch(session_reg_href, data=payload, headers=headers)
-        if res.status_code != 200:
+        res = await self.async_client.patch(
+            session_reg_href, content=payload, headers=headers
+        )
+        if not res.is_success:
             logger.error(
                 f"Unable to update attendance: {res.status_code} {res.content}"
             )
-        return res.status_code == 200
+        return res.is_success
