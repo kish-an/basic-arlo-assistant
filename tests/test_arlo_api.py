@@ -53,24 +53,31 @@ def api_example_event_sessions(start_date="2024-01-01"):
     """
 
 
-def api_example_event_session_registrations(first_name, last_name, email):
+def api_example_event_session_registrations(registrations):
+    event_session_regs_xml = ""
+    for reg in registrations:
+        event_session_regs_xml += f"""
+        <Link title="EventSessionRegistration" href="reg-href">
+            <EventSessionRegistration>
+                <Link title="ParentRegistration">
+                    <Registration>
+                        <Status>{reg[3]}</Status>
+                        <Link title="Contact">
+                            <Contact>
+                                <FirstName>{reg[0]}</FirstName>
+                                <LastName>{reg[1]}</LastName>
+                                <Email>{reg[2]}</Email>
+                            </Contact>
+                        </Link>
+                    </Registration>
+                </Link>
+            </EventSessionRegistration>
+        </Link>
+        """
+
     return f"""
         <EventSessionRegistrations>
-            <Link title="EventSessionRegistration" href="reg-href">
-                <EventSessionRegistration>
-                    <Link title="ParentRegistration">
-                        <Registration>
-                            <Link title="Contact">
-                                <Contact>
-                                    <FirstName>{first_name}</FirstName>
-                                    <LastName>{last_name}</LastName>
-                                    <Email>{email}</Email>
-                                </Contact>
-                            </Link>
-                        </Registration>
-                    </Link>
-                </EventSessionRegistration>
-            </Link>
+            {event_session_regs_xml}
         </EventSessionRegistrations>
     """
 
@@ -182,7 +189,7 @@ def test_get_registrations_tree(mocker, arlo_client):
         return_value=mock_response(
             200,
             api_example_event_session_registrations(
-                "Ada", "Lovelace", "ada@example.com"
+                [("Ada", "Lovelace", "ada@example.com", "Approved")]
             ),
         ),
     )
@@ -201,12 +208,16 @@ def test_get_registrations(mocker, arlo_client):
         "_get_registrations_tree",
         return_value=etree.fromstring(
             api_example_event_session_registrations(
-                "Ada", "Lovelace", "ada@example.com"
+                [
+                    ("Ada", "Lovelace", "ada@example.com", "Approved"),
+                    ("Dorothy", "Hodgkin", "dorothy@example.com", "Cancelled"),
+                ]
             )
         ),
     )
 
     registrations = list(arlo_client.get_registrations(event_code, session_date))
+    # Cancelled registration should not be returned
     assert len(registrations) == 1
     assert registrations[0].name == "Ada Lovelace"
     assert registrations[0].email == "ada@example.com"
