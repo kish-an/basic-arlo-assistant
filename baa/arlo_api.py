@@ -303,3 +303,8 @@ class ArloClient:
                 f"Unable to update attendance: {res.status_code} {res.content}"
             )
         return res.is_success
+
+    async def close(self) -> None:
+        """Close the sync and async httpx clients"""
+        self.client.close()
+        await self.async_client.aclose()
