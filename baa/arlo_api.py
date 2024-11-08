@@ -1,6 +1,5 @@
 import logging
-import requests
-from requests.auth import HTTPBasicAuth
+import httpx
 from lxml import etree
 from copy import deepcopy
 from datetime import datetime
@@ -36,14 +35,14 @@ class ArloClient:
         Args:
             platform (str): The platform subdomain (e.g., "myarlo") for API requests.
         """
-        self.session = requests.Session()
-        self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
+        auth = httpx.BasicAuth(*get_keyring_credentials())
+        self.client = httpx.Client(auth=auth)
         self.event_cache: dict[str, etree._Element] = {}
         self.session_cache: dict[str, etree._Element] = {}
         logger.debug(f"Initialising ArloClient for {self.base_url}")
 
-    def _get_response(self, url: str, params: dict = None) -> requests.Response:
+    def _get_response(self, url: str, params: dict = None) -> httpx.Response:
         """
         Sends a GET request to the specified URL and handles authentication errors.
 
@@ -58,13 +57,13 @@ class ArloClient:
         Returns:
             requests.Response: The response from the API.
         """
-        res = self.session.get(url, params=params)
+        res = self.client.get(url, params=params)
         if res.status_code == 401:
             remove_keyring_credentials()
             raise AuthenticationFailed(
                 "🚨 Authentication to the Arlo API failed. Ensure you have provided the correct credentials"
             )
-        elif res.status_code != 200:
+        elif not res.is_success:
             raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
 
         return res
