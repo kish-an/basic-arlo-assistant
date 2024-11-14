@@ -222,15 +222,25 @@ def test_get_registrations(mocker, arlo_client):
     assert registrations[0].reg_href == "reg-href"
 
 
-def test_update_attendance(mocker, arlo_client):
+@pytest.mark.asyncio
+async def test_update_attendance(mocker, arlo_client):
     session_reg_href = "http://test.url/registration"
-    mocker.patch.object(arlo_client.session, "patch", return_value=mock_response(200))
-    assert arlo_client.update_attendance(session_reg_href, AttendanceStatus.ATTENDED)
 
-    mocker.patch.object(arlo_client.session, "patch", return_value=mock_response(500))
-    assert not arlo_client.update_attendance(
+    mocker.patch.object(
+        arlo_client.async_client, "patch", return_value=mock_response(200)
+    )
+    update_sucess = await arlo_client.update_attendance(
         session_reg_href, AttendanceStatus.ATTENDED
     )
+    assert update_sucess
+
+    mocker.patch.object(
+        arlo_client.async_client, "patch", return_value=mock_response(500)
+    )
+    update_sucess = await arlo_client.update_attendance(
+        session_reg_href, AttendanceStatus.ATTENDED
+    )
+    assert not update_sucess
 
 
 def test_append_paginated(mocker, arlo_client):
