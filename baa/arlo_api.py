@@ -1,6 +1,5 @@
 import logging
-import requests
-from requests.auth import HTTPBasicAuth
+import httpx
 from lxml import etree
 from copy import deepcopy
 from datetime import datetime
@@ -36,14 +35,15 @@ class ArloClient:
         Args:
             platform (str): The platform subdomain (e.g., "myarlo") for API requests.
         """
-        self.session = requests.Session()
-        self.session.auth = HTTPBasicAuth(*get_keyring_credentials())
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
+        auth = httpx.BasicAuth(*get_keyring_credentials())
+        self.client = httpx.Client(auth=auth)
+        self.async_client = httpx.AsyncClient(auth=auth)
         self.event_cache: dict[str, etree._Element] = {}
         self.session_cache: dict[str, etree._Element] = {}
         logger.debug(f"Initialising ArloClient for {self.base_url}")
 
-    def _get_response(self, url: str, params: dict = None) -> requests.Response:
+    def _get_response(self, url: str, params: dict = None) -> httpx.Response:
         """
         Sends a GET request to the specified URL and handles authentication errors.
 
@@ -58,13 +58,13 @@ class ArloClient:
         Returns:
             requests.Response: The response from the API.
         """
-        res = self.session.get(url, params=params)
+        res = self.client.get(url, params=params)
         if res.status_code == 401:
             remove_keyring_credentials()
             raise AuthenticationFailed(
                 "🚨 Authentication to the Arlo API failed. Ensure you have provided the correct credentials"
             )
-        elif res.status_code != 200:
+        elif not res.is_success:
             raise ApiCommunicationFailure("🚨 Unable to communicate with the Arlo API")
 
         return res
@@ -280,7 +280,7 @@ class ArloClient:
                 reg_href=reg_href,
             )
 
-    def update_attendance(
+    async def update_attendance(
         self, session_reg_href: str, attendance: AttendanceStatus
     ) -> bool:
         """
@@ -299,10 +299,16 @@ class ArloClient:
             <replace sel="EventSessionRegistration/Attendance/text()[1]">{attendance.value}</replace>
         </diff>
         """
-
-        res = self.session.patch(session_reg_href, data=payload, headers=headers)
-        if res.status_code != 200:
+        res = await self.async_client.patch(
+            session_reg_href, content=payload, headers=headers
+        )
+        if not res.is_success:
             logger.error(
                 f"Unable to update attendance: {res.status_code} {res.content}"
             )
-        return res.status_code == 200
+        return res.is_success
+
+    async def close(self) -> None:
+        """Close the sync and async httpx clients"""
+        self.client.close()
+        await self.async_client.aclose()

@@ -10,10 +10,10 @@ repository = "https://github.com/kish-an/basic-arlo-assistant"
 [tool.poetry.dependencies]
 python = "^3.10"
 click = "^8.1.7"
-requests = "^2.32.3"
 keyring = "^25.4.1"
 lxml = "^5.3.0"
 prettytable = "^3.11.0"
+httpx = "^0.27.2"
 
 [tool.poetry.scripts]
 baa = "baa.cli:main"
@@ -21,6 +21,7 @@ baa = "baa.cli:main"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 pytest-mock = "^3.14.0"
+pytest-asyncio = "^0.24.0"
 
 [build-system]
 requires = ["poetry-core"]

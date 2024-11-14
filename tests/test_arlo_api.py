@@ -1,5 +1,5 @@
 import pytest
-from requests.models import Response
+from httpx import Response
 from lxml import etree
 from datetime import datetime
 from baa.arlo_api import ArloClient
@@ -19,9 +19,7 @@ def arlo_client(mocker):
 
 
 def mock_response(status_code=200, content=""):
-    response = Response()
-    response.status_code = status_code
-    response._content = content.encode("utf-8")
+    response = Response(status_code=status_code, content=content.encode("utf-8"))
     return response
 
 
@@ -92,7 +90,7 @@ def api_example_event_session_registrations(registrations):
 def test_api_exceptions(mocker, arlo_client, status_code, exception):
     mock_remove_creds = mocker.patch("baa.arlo_api.remove_keyring_credentials")
     mocker.patch.object(
-        arlo_client.session, "get", return_value=mock_response(status_code)
+        arlo_client.client, "get", return_value=mock_response(status_code)
     )
 
     with pytest.raises(exception):
@@ -105,7 +103,7 @@ def test_api_exceptions(mocker, arlo_client, status_code, exception):
 def test_get_event_tree(mocker, arlo_client):
     event_code = "CK24ABC"
     mocker.patch.object(
-        arlo_client.session,
+        arlo_client.client,
         "get",
         return_value=mock_response(200, api_example_events()),
     )
@@ -120,7 +118,7 @@ def test_get_event_tree(mocker, arlo_client):
 def test_get_session_tree(mocker, arlo_client):
     event_id = "1234"
     mocker.patch.object(
-        arlo_client.session,
+        arlo_client.client,
         "get",
         return_value=mock_response(200, api_example_event_sessions()),
     )
@@ -184,7 +182,7 @@ def test_no_session_id(mocker, arlo_client):
 def test_get_registrations_tree(mocker, arlo_client):
     session_id = "5678"
     mocker.patch.object(
-        arlo_client.session,
+        arlo_client.client,
         "get",
         return_value=mock_response(
             200,
@@ -224,15 +222,25 @@ def test_get_registrations(mocker, arlo_client):
     assert registrations[0].reg_href == "reg-href"
 
 
-def test_update_attendance(mocker, arlo_client):
+@pytest.mark.asyncio
+async def test_update_attendance(mocker, arlo_client):
     session_reg_href = "http://test.url/registration"
-    mocker.patch.object(arlo_client.session, "patch", return_value=mock_response(200))
-    assert arlo_client.update_attendance(session_reg_href, AttendanceStatus.ATTENDED)
 
-    mocker.patch.object(arlo_client.session, "patch", return_value=mock_response(500))
-    assert not arlo_client.update_attendance(
+    mocker.patch.object(
+        arlo_client.async_client, "patch", return_value=mock_response(200)
+    )
+    update_sucess = await arlo_client.update_attendance(
         session_reg_href, AttendanceStatus.ATTENDED
     )
+    assert update_sucess
+
+    mocker.patch.object(
+        arlo_client.async_client, "patch", return_value=mock_response(500)
+    )
+    update_sucess = await arlo_client.update_attendance(
+        session_reg_href, AttendanceStatus.ATTENDED
+    )
+    assert not update_sucess
 
 
 def test_append_paginated(mocker, arlo_client):
@@ -248,7 +256,7 @@ def test_append_paginated(mocker, arlo_client):
         </Root>
     """
     mocker.patch.object(
-        arlo_client.session,
+        arlo_client.client,
         "get",
         side_effect=[
             mock_response(200, second_page_content),

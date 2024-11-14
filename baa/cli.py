@@ -1,8 +1,9 @@
 import click
 import sys
+import asyncio
+import logging
 from pathlib import Path
 from datetime import datetime
-import logging
 
 from baa.main import baa
 from baa.log import configure_logger
@@ -100,15 +101,17 @@ def main(
         set_keyring_credentials()
 
     try:
-        baa(
-            attendee_file,
-            format,
-            platform,
-            event_code,
-            date,
-            min_duration,
-            skip_absent,
-            dry_run,
+        asyncio.run(
+            baa(
+                attendee_file,
+                format,
+                platform,
+                event_code,
+                date,
+                min_duration,
+                skip_absent,
+                dry_run,
+            )
         )
     except (
         EventNotFound,
