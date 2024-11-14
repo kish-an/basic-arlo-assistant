@@ -138,3 +138,18 @@ async def test_baa_update_failed(mocker, mock_arlo_client, tmp_path):
     )
     assert reg1.attendance_registered
     assert reg2.attendance_registered is None
+
+
+@pytest.mark.asyncio
+async def test_baa_closes_client_on_exception(mocker, mock_arlo_client, tmp_path):
+    mock_close = AsyncMock()
+    mock_arlo_client.return_value.close = mock_close
+
+    mocker.patch(
+        "baa.main.butter.get_attendees", side_effect=AttendeeFileProcessingError()
+    )
+
+    with pytest.raises(AttendeeFileProcessingError):
+        await run_baa(tmp_path)
+
+    mock_close.assert_called_once()
