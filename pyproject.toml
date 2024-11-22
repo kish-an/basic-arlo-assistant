@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "baa"
-version = "0.2.0"
+version = "0.3.0"
 description = "Command line utility to automate attendance registration in Arlo"
 authors = ["Kishan <kishan.o@hotmail.com>"]
 readme = "README.md"
