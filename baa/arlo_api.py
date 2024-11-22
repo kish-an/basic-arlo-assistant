@@ -38,7 +38,7 @@ class ArloClient:
         self.base_url = f"https://{platform}.arlo.co/api/2012-02-01/auth/resources"
         auth = httpx.BasicAuth(*get_keyring_credentials())
         self.client = httpx.Client(auth=auth)
-        self.async_client = httpx.AsyncClient(auth=auth)
+        self.async_client = httpx.AsyncClient(auth=auth, http2=True)
         self.event_cache: dict[str, etree._Element] = {}
         self.session_cache: dict[str, etree._Element] = {}
         logger.debug(f"Initialising ArloClient for {self.base_url}")
